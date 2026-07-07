@@ -126,9 +126,9 @@ function downloadSelectedPart096(trim=false){
   const label=selectedLabel(); const id=makeLabelImageData096(label); if(!id) return;
   if(trim){
     const bbox=labelBBox096(label,4); const cropped=cropImageData096(id,bbox);
-    imageDataToPngBlob096(cropped,b=>safeDownload(b,`sprite_region_part_${label}_trim_v0_9_6_2.png`,'image/png'));
+    imageDataToPngBlob096(cropped,b=>safeDownload(b,`sprite_region_part_${label}_trim_v0_9_8_1.png`,'image/png'));
   }else{
-    imageDataToPngBlob096(id,b=>safeDownload(b,`sprite_region_part_${label}_full_v0_9_6_2.png`,'image/png'));
+    imageDataToPngBlob096(id,b=>safeDownload(b,`sprite_region_part_${label}_full_v0_9_8_1.png`,'image/png'));
   }
 }
 function makePartButtons096(){
