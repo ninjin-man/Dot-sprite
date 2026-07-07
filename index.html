@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Sprite Studio Region Viewer v0.9.6.2</title>
+<title>Sprite Studio Region Viewer v0.9.8.1</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-<h1>Sprite Studio Region Viewer v0.9.6.2</h1>
-<div class="sub">AIなし / Canvas + localStorageのみ。v0.9.6.2: ラベル別ズーム確認・選択部位PNG保存・トリムPNG保存・保存安定化。</div>
+<h1>Sprite Studio Region Viewer v0.9.8.1</h1>
+<div class="sub">AIなし / Canvas + localStorageのみ。v0.9.8.1: memory v2安定化・品質レポート版数整合。</div>
 <div class="bar">
 <input id="file" type="file" accept="image/*" />
 <select id="k"><option value="7">色数 k=7</option><option value="6">色数 k=6</option><option value="8">色数 k=8</option><option value="10">色数 k=10</option></select>
@@ -63,7 +63,7 @@
   <div class="card"><h2>11. Part Preview</h2><canvas id="cPart"></canvas><div class="legend" id="partButtons"></div></div>
   <div class="card wide"><h2>Result Log</h2><div id="log" class="log"></div></div>
 </div>
-<div class="footer">MVP目的：完全自動ではなく、手動補正しやすい候補Regionを作る。v0.9.6.2はラベル別確認・ズーム表示・部位PNG出力を強化した検証版です。</div>
+<div class="footer">MVP目的：完全自動ではなく、手動補正しやすい候補Regionを作る。v0.9.8.1はmemory v2保存を安全化した検証版です。</div>
 
 <script src="js/00_legacy_v0923_core.js"></script>
 <script src="js/01_inner_recovery_freehand.js"></script>
@@ -73,6 +73,8 @@
 <script src="js/05_v095_face_detail_review.js"></script>
 <script src="js/06_v0951_eye_detail_tuning.js"></script>
 <script src="js/07_v0952_eye_pair_validation.js"></script>
-<script src="js/08_v096_label_review_export.js?v=0.9.6.2"></script>
+<script src="js/08_v096_label_review_export.js?v=0.9.8"></script>
+<script src="js/09_v097_memory_v2.js?v=0.9.8"></script>
+<script src="js/10_v098_review_reduction.js?v=0.9.8.1"></script>
 </body>
 </html>
