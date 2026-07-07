@@ -1,8 +1,8 @@
 // ===== v0.9.6 patch: label review panel / quality report / selected label PNG export =====
 (function(){
 'use strict';
-const VERSION_096='0.9.6';
-const PREPROCESSOR_VERSION_096='v0.4-restored-stable+inner-recovery+guards+distance-scores+edge-texture+face-detail+eye-tuning+validated-eye-pair+label-review-export';
+const VERSION_096='0.9.6.1';
+const PREPROCESSOR_VERSION_096='v0.4-restored-stable+inner-recovery+guards+distance-scores+edge-texture+face-detail+eye-tuning+validated-eye-pair+label-review-export+json-save-fix';
 function safeQS(id){ return typeof qs==='function' ? qs(id) : document.getElementById(id); }
 function safeColor(label){ return (COLORS && (COLORS[label]||COLORS.unknown)) || [255,80,120]; }
 function selectedLabel(){ return state.selectedPart || 'face'; }
@@ -18,7 +18,12 @@ function partStats096(){
   return Object.values(map).map(s=>({...s,avg_conf:s.count?Math.round(s.avg_conf/s.count):0,area_ratio:+(s.area/Math.max(1,(state.w||1)*(state.h||1))).toFixed(5)})).sort((a,b)=>b.area-a.area);
 }
 function qualityReport096(){
-  const res=state.result||{}, pre=res.pre||{}, fd=(metadata092&&typeof metadata092==='function')?metadata092().face_detection:null;
+  const res=state.result||{}, pre=res.pre||{};
+  const fd={
+    eye_candidate_count:(res.eyeCandidates0952||res.eyeCandidates0951||res.eyeCandidates095||res.eyeCandidates||[]).length,
+    eye_pair_count:(res.eyePairs0952||res.eyePairs0951||res.eyePairs095||res.eyePairs||[]).length,
+    eye_validation:res.eyeValidation0952||null
+  };
   const stats=partStats096();
   const reviewCount=((res.candidates||[]).filter(r=>r.needsReview)).length;
   const huge=(stats||[]).filter(s=>s.area_ratio>.12 && !['soft_shell'].includes(s.label)).map(s=>({label:s.label,area_ratio:s.area_ratio,count:s.count}));
@@ -87,11 +92,11 @@ function imageDataToPngBlob096(id,cb){
 }
 function downloadSelectedPart096(){
   const label=selectedLabel(); const id=makeLabelImageData096(label); if(!id) return;
-  imageDataToPngBlob096(id,b=>downloadBlob(b,`sprite_region_part_${label}_v0_9_6.png`,'image/png'));
+  imageDataToPngBlob096(id,b=>downloadBlob(b,`sprite_region_part_${label}_v0_9_6_1.png`,'image/png'));
 }
 function addUIPatch096(){
   const btn=safeQS('partPng'); if(btn) btn.onclick=downloadSelectedPart096;
-  try{ document.title='Sprite Studio Region Viewer v0.9.6'; const h1=document.querySelector('h1'); if(h1) h1.textContent='Sprite Studio Region Viewer v0.9.6'; }catch(e){}
+  try{ document.title='Sprite Studio Region Viewer v0.9.6.1'; const h1=document.querySelector('h1'); if(h1) h1.textContent='Sprite Studio Region Viewer v0.9.6.1'; }catch(e){}
 }
 if(typeof renderAll==='function'){
   const prevRenderAll=renderAll;
@@ -126,8 +131,8 @@ if(typeof logResult==='function'){
   };
 }
 try{
-  const json=safeQS('json'); if(json) json.onclick=()=>{if(!state.result)return;downloadBlob(JSON.stringify(metadata092(),null,2),'sprite_region_metadata_v0_9_6.json','application/json');};
-  const summary=safeQS('summary'); if(summary) summary.onclick=()=>{let cards=[canvases.original,canvases.cutout,canvases.analysis,canvases.masks,canvases.lines,canvases.cluster,canvases.before,canvases.after,canvases.cand,canvases.unknownBefore,canvases.unknownAfter,canvases.part].filter(Boolean);let titles=['Original','Background Removed / Checker','Analysis','Masks','Base Lines','Color Cluster','Region Before','Region After','Candidates','Unknown Before','Unknown After','Part'];let W=960,H=1850,c=document.createElement('canvas');c.width=W;c.height=H;let ctx=c.getContext('2d');ctx.fillStyle='#0f1520';ctx.fillRect(0,0,W,H);ctx.fillStyle='#e8eef8';ctx.font='26px sans-serif';ctx.fillText('Sprite Studio Region Viewer v0.9.6 Summary',20,36);let cellW=290,cellH=320;for(let i=0;i<cards.length;i++){let cc=cards[i],col=i%3,row=(i/3)|0,x=20+col*(cellW+20),y=60+row*(cellH+35);ctx.fillStyle='#202a3a';ctx.fillRect(x,y,cellW,32);ctx.fillStyle='#e8eef8';ctx.font='16px sans-serif';ctx.fillText(titles[i],x+8,y+22);ctx.drawImage(cc,x,y+36,cellW,Math.min(cellH-38,cellW*cc.height/cc.width));}c.toBlob(b=>downloadBlob(b,'sprite_region_summary_v0_9_6.png','image/png'));};
+  const json=safeQS('json'); if(json) json.onclick=()=>{if(!state.result)return;downloadBlob(JSON.stringify(metadata092(),null,2),'sprite_region_metadata_v0_9_6_1.json','application/json');};
+  const summary=safeQS('summary'); if(summary) summary.onclick=()=>{let cards=[canvases.original,canvases.cutout,canvases.analysis,canvases.masks,canvases.lines,canvases.cluster,canvases.before,canvases.after,canvases.cand,canvases.unknownBefore,canvases.unknownAfter,canvases.part].filter(Boolean);let titles=['Original','Background Removed / Checker','Analysis','Masks','Base Lines','Color Cluster','Region Before','Region After','Candidates','Unknown Before','Unknown After','Part'];let W=960,H=1850,c=document.createElement('canvas');c.width=W;c.height=H;let ctx=c.getContext('2d');ctx.fillStyle='#0f1520';ctx.fillRect(0,0,W,H);ctx.fillStyle='#e8eef8';ctx.font='26px sans-serif';ctx.fillText('Sprite Studio Region Viewer v0.9.6.1 Summary',20,36);let cellW=290,cellH=320;for(let i=0;i<cards.length;i++){let cc=cards[i],col=i%3,row=(i/3)|0,x=20+col*(cellW+20),y=60+row*(cellH+35);ctx.fillStyle='#202a3a';ctx.fillRect(x,y,cellW,32);ctx.fillStyle='#e8eef8';ctx.font='16px sans-serif';ctx.fillText(titles[i],x+8,y+22);ctx.drawImage(cc,x,y+36,cellW,Math.min(cellH-38,cellW*cc.height/cc.width));}c.toBlob(b=>downloadBlob(b,'sprite_region_summary_v0_9_6_1.png','image/png'));};
 }catch(e){}
 addUIPatch096();
 })();
