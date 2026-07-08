@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Sprite Studio Region Viewer v0.9.14 Phase5</title>
+<title>Sprite Studio Region Viewer v0.9.15</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-<h1>Sprite Studio Region Viewer v0.9.14 Phase5</h1>
-<div class="sub">AIなし / Canvas + localStorageのみ。v0.9.14 Phase5: 32x32ドット絵化に向けて、残す/統合/補助/省略を自動整理します。</div>
+<h1>Sprite Studio Region Viewer v0.9.15</h1>
+<div class="sub">AIなし / Canvas + localStorageのみ。v0.9.15: JSONを軽量化し、部位を教える操作をその場で現在結果へ反映します。</div>
 <div class="bar">
 <input id="file" type="file" accept="image/*" />
 <select id="k"><option value="7">色数 k=7</option><option value="6">色数 k=6</option><option value="8">色数 k=8</option><option value="10">色数 k=10</option></select>
@@ -64,7 +64,7 @@
   <div class="card"><h2>11. Part Preview</h2><canvas id="cPart"></canvas><div class="legend" id="partButtons"></div></div>
   <div class="card wide"><h2>Result Log</h2><div id="log" class="log"></div></div>
 </div>
-<div class="footer">MVP目的：完全自動ではなく、手動補正しやすい候補Regionを作る。v0.9.14 Phase5は、細かい解析結果を32x32で読める形へ整理します。</div>
+<div class="footer">MVP目的：完全自動ではなく、手動補正しやすい候補Regionを作る。v0.9.15は、保存方式と補正UIの実効性を改善します。通常JSONは軽量版、部位レビューは押した直後に現在の解析結果へ反映されます。</div>
 
 <script src="js/00_legacy_v0923_core.js"></script>
 <script src="js/01_inner_recovery_freehand.js"></script>
@@ -86,5 +86,6 @@
 <script src="js/17_v0912_phase3_structure_graph.js?v=0.9.12-phase3"></script>
 <script src="js/18_v0913_phase4_hair_cloth_semantics.js?v=0.9.13-phase4"></script>
 <script src="js/19_v0914_phase5_pixel_simplification.js?v=0.9.14-phase5"></script>
+<script src="js/20_v0915_export_teach_live.js?v=0.9.15-export-teach-live"></script>
 </body>
 </html>
