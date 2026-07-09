@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Sprite Studio Pixel Pipeline v1.9</title>
+<title>Sprite Studio Pixel Pipeline v1.10.1</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-<h1>Sprite Studio Pixel Pipeline v1.9</h1>
-<div class="sub">AIなし / Canvas + localStorageのみ。v1.9: semantic multi-stage balance。128→64→32で顔保護・目再描画・髪外形保持まで行います。</div>
+<h1>Sprite Studio Pixel Pipeline v1.10.1</h1>
+<div class="sub">AIなし / Canvas + localStorageのみ。v1.10.1: mask-part semantic。128→64→32の各段階を見える化し、部位マスク再構成でゲーム用32x32を作成します。</div>
 <div class="bar">
 <input id="file" type="file" accept="image/*" />
 <select id="k"><option value="7">色数 k=7</option><option value="6">色数 k=6</option><option value="8">色数 k=8</option><option value="10">色数 k=10</option></select>
@@ -54,28 +54,30 @@
 <div class="grid">
   <div class="card"><h2>0. Original <span id="size" class="pill"></span></h2><canvas id="cOriginal"></canvas></div>
   <div class="card"><h2>1. Background Removed / Checker</h2><canvas id="cCutout"></canvas></div>
-  <div class="card"><h2>2. Analysis Image <span id="score" class="pill"></span></h2><canvas id="cAnalysis"></canvas></div>
-  <div class="card"><h2>3. Core / Soft / Shadow</h2><canvas id="cMasks"></canvas></div>
+  <div class="card" style="display:none"><h2>2. Analysis Image <span id="score" class="pill"></span></h2><canvas id="cAnalysis"></canvas></div>
+  <div class="card" style="display:none"><h2>3. Core / Soft / Shadow</h2><canvas id="cMasks"></canvas></div>
   <div class="card"><h2>4. Base Lines</h2><canvas id="cLines"></canvas></div>
-  <div class="card"><h2>5. Color Cluster</h2><canvas id="cCluster"></canvas></div>
-  <div class="card"><h2>6. Region Before Merge</h2><canvas id="cBefore"></canvas></div>
+  <div class="card" style="display:none"><h2>5. Color Cluster</h2><canvas id="cCluster"></canvas></div>
+  <div class="card" style="display:none"><h2>6. Region Before Merge</h2><canvas id="cBefore"></canvas></div>
   <div class="card"><h2>7. Region After Merge</h2><canvas id="cAfter"></canvas></div>
-  <div class="card"><h2>8. Candidate Preview</h2><canvas id="cCand"></canvas></div>
-  <div class="card"><h2>9. Unknown Before</h2><canvas id="cUnknownBefore"></canvas></div>
-  <div class="card"><h2>10. Unknown After / Review</h2><canvas id="cUnknownAfter"></canvas></div>
+  <div class="card" style="display:none"><h2>8. Candidate Preview</h2><canvas id="cCand"></canvas></div>
+  <div class="card" style="display:none"><h2>9. Unknown Before</h2><canvas id="cUnknownBefore"></canvas></div>
+  <div class="card" style="display:none"><h2>10. Unknown After / Review</h2><canvas id="cUnknownAfter"></canvas></div>
   <div class="card"><h2>11. Part Preview</h2><canvas id="cPart"></canvas><div class="legend" id="partButtons"></div></div>
   
-  <div class="card wide"><h2>12. 32x32 Sprite Output <span id="spriteStatus" class="pill">not run</span></h2>
+  <div class="card wide"><h2>12. Sprite Output 128 → 64 → 32 <span id="spriteStatus" class="pill">not run</span></h2>
     <div class="spriteOutputGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;align-items:start">
+      <div><div class="mini">128x128 再構成土台</div><canvas id="cSprite128" style="image-rendering:pixelated;width:128px;height:128px;border:1px solid #334155"></canvas></div>
+      <div><div class="mini">64x64 中間段階</div><canvas id="cSprite64" style="image-rendering:pixelated;width:128px;height:128px;border:1px solid #334155"></canvas></div>
       <div><div class="mini">実寸32x32</div><canvas id="cSprite32" style="image-rendering:pixelated;width:128px;height:128px;border:1px solid #334155"></canvas></div>
-      <div><div class="mini">拡大プレビュー</div><canvas id="cSpritePreview" style="image-rendering:pixelated;width:320px;height:320px;max-width:100%;border:1px solid #334155"></canvas></div>
+      <div><div class="mini">32x32 拡大プレビュー</div><canvas id="cSpritePreview" style="image-rendering:pixelated;width:320px;height:320px;max-width:100%;border:1px solid #334155"></canvas></div>
       <div><div class="mini">ゲーム用グループ</div><canvas id="cGameGroups" style="max-width:100%;border:1px solid #334155"></canvas></div>
     </div>
-    <div id="pixelLog" class="log" style="max-height:220px;margin-top:8px"></div>
+    <div id="pixelLog" class="log" style="max-height:260px;margin-top:8px"></div>
   </div>
-<div class="card wide"><h2>Result Log</h2><div id="log" class="log"></div></div>
+<div class="card wide" style="display:none"><h2>Result Log</h2><div id="log" class="log"></div></div>
 </div>
-<div class="footer">v1.9は semantic multi-stage balance renderer です。C方針で、true-sourceを維持しながら128→64→32の各段階で再構成を行います。</div>
+<div class="footer">v1.10.1 は mask-part semantic renderer です。128→64→32 の中間段階を表示し、部位マスク再構成の確認ができるようにしました。</div>
 
 <script src="js/00_legacy_v0923_core.js"></script>
 <script src="js/01_inner_recovery_freehand.js"></script>
@@ -107,5 +109,6 @@
 <script src="js/28_v17_true_source_pixel_renderer.js?v=1.7-true-source-pixel"></script>
 <script src="js/29_v18_hybrid_chibi_renderer.js?v=1.8.1-hybrid-true-source-chibi"></script>
 <script src="js/30_v19_semantic_multistage_renderer.js?v=1.9-semantic-multistage-balance"></script>
+<script src="js/31_v110_mask_part_semantic_renderer.js?v=1.10-mask-part-semantic"></script>
 </body>
 </html>
