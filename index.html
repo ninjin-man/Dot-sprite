@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Sprite Studio Pixel Pipeline v1.4</title>
+<title>Sprite Studio Pixel Pipeline v1.5</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-<h1>Sprite Studio Pixel Pipeline v1.4</h1>
-<div class="sub">AIなし / Canvas + localStorageのみ。v1.4: design adaptive cute mode。画像ごとに髪型・服型・袖型まで変えます。</div>
+<h1>Sprite Studio Pixel Pipeline v1.5</h1>
+<div class="sub">AIなし / Canvas + localStorageのみ。v1.5: silhouette-driven。部位の輪郭形状を32x32へ再投影します。</div>
 <div class="bar">
 <input id="file" type="file" accept="image/*" />
 <select id="k"><option value="7">色数 k=7</option><option value="6">色数 k=6</option><option value="8">色数 k=8</option><option value="10">色数 k=10</option></select>
@@ -75,7 +75,7 @@
   </div>
 <div class="card wide"><h2>Result Log</h2><div id="log" class="log"></div></div>
 </div>
-<div class="footer">v1.4は design adaptive cute renderer です。固定テンプレから一歩進めて、現在画像の解析結果から髪型・服型・袖型・顔型を分岐させます。</div>
+<div class="footer">v1.5は silhouette-driven renderer です。固定テンプレではなく、髪・袖・服・脚・靴の入力シルエットをゲーム用32x32へ再構成します。</div>
 
 <script src="js/00_legacy_v0923_core.js"></script>
 <script src="js/01_inner_recovery_freehand.js"></script>
@@ -103,5 +103,6 @@
 <script src="js/23_v12_cute_mode_renderer.js?v=1.2-cute-mode-renderer"></script>
 <script src="js/24_v13_adaptive_cute_renderer.js?v=1.3-adaptive-cute-renderer"></script>
 <script src="js/25_v14_design_archetype_renderer.js?v=1.4-design-adaptive-cute"></script>
+<script src="js/26_v15_silhouette_driven_renderer.js?v=1.5-silhouette-driven-renderer"></script>
 </body>
 </html>
