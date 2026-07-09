@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Sprite Studio Pixel Pipeline v1.2</title>
+<title>Sprite Studio Pixel Pipeline v1.4</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-<h1>Sprite Studio Pixel Pipeline v1.2</h1>
-<div class="sub">AIなし / Canvas + localStorageのみ。v1.2: cute mode を追加し、32x32を可愛く読める頭身・顔・髪に再設計しました。</div>
+<h1>Sprite Studio Pixel Pipeline v1.4</h1>
+<div class="sub">AIなし / Canvas + localStorageのみ。v1.4: design adaptive cute mode。画像ごとに髪型・服型・袖型まで変えます。</div>
 <div class="bar">
 <input id="file" type="file" accept="image/*" />
 <select id="k"><option value="7">色数 k=7</option><option value="6">色数 k=6</option><option value="8">色数 k=8</option><option value="10">色数 k=10</option></select>
@@ -75,7 +75,7 @@
   </div>
 <div class="card wide"><h2>Result Log</h2><div id="log" class="log"></div></div>
 </div>
-<div class="footer">v1.2は cute mode レンダラ版です。解析結果を直接縮小せず、可愛い頭身・顔・目・髪・袖・装飾テンプレで32x32へ再構成します。</div>
+<div class="footer">v1.4は design adaptive cute renderer です。固定テンプレから一歩進めて、現在画像の解析結果から髪型・服型・袖型・顔型を分岐させます。</div>
 
 <script src="js/00_legacy_v0923_core.js"></script>
 <script src="js/01_inner_recovery_freehand.js"></script>
@@ -101,5 +101,7 @@
 <script src="js/21_v10_pixel_output.js?v=1.0-pixel-output"></script>
 <script src="js/22_v11_save_and_template_sprite.js?v=1.1-save-template-sprite"></script>
 <script src="js/23_v12_cute_mode_renderer.js?v=1.2-cute-mode-renderer"></script>
+<script src="js/24_v13_adaptive_cute_renderer.js?v=1.3-adaptive-cute-renderer"></script>
+<script src="js/25_v14_design_archetype_renderer.js?v=1.4-design-adaptive-cute"></script>
 </body>
 </html>
