@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Sprite Studio Pixel Pipeline v1.14.5-v112bg-pixel128</title>
+<title>Sprite Studio Pixel Pipeline v1.14.6-bgfix</title>
 <style>
-:root{--bg:#0f172a;--panel:#1e293b;--panel2:#111827;--line:#334155;--text:#e2e8f0;--muted:#94a3b8;--ok:#22c55e;--accent:#38bdf8}
+:root{--bg:#0f172a;--panel:#1e293b;--panel2:#111827;--line:#334155;--text:#e2e8f0;--muted:#94a3b8}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:14px;padding-bottom:40px}h1{font-size:20px;margin:0 0 4px}.sub{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px}.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px;margin:10px 0}button,input,select{font:inherit}button{border:1px solid var(--line);border-radius:12px;background:#22304a;color:var(--text);padding:9px 12px;font-weight:700}button.primary{background:#0f766e;border-color:#14b8a6}button.save{background:#1d4ed8;border-color:#60a5fa}button:active{transform:translateY(1px)}input[type=file]{max-width:100%;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}.card h2{font-size:16px;margin:0;padding:10px 12px;background:#22304a;display:flex;justify-content:space-between;gap:8px;align-items:center}.card .body{padding:10px}.card canvas{display:block;max-width:100%;background:#0b1020;border:1px solid var(--line);border-radius:8px}.wide{grid-column:1/-1}.pill{font-size:12px;color:#cbd5e1;background:#0f172a;border:1px solid var(--line);border-radius:999px;padding:3px 8px;white-space:nowrap}.log{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;color:#cbd5e1;background:#0b1020;border:1px solid var(--line);border-radius:12px;padding:10px;max-height:260px;overflow:auto}.outputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-items:start}.canvasLabel{font-size:12px;color:#cbd5e1;margin-bottom:4px}.preview128{width:256px;height:256px;image-rendering:pixelated}.actual128{width:128px;height:128px;image-rendering:pixelated}.maskPreview{width:256px;height:256px;image-rendering:pixelated}.checker{background-color:#111827;background-image:linear-gradient(45deg,#1e293b 25%,transparent 25%),linear-gradient(-45deg,#1e293b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1e293b 75%),linear-gradient(-45deg,transparent 75%,#1e293b 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}.notice{border:1px solid #164e63;background:#082f49;border-radius:14px;padding:10px;margin:10px 0;color:#dbeafe;font-size:13px;line-height:1.55}.footer{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}@media(max-width:640px){body{padding:10px}.grid{grid-template-columns:1fr}.preview128{width:100%;height:auto}.bar button{flex:1 1 auto}}
 </style>
 </head>
 <body>
-<h1>Sprite Studio Pixel Pipeline v1.14.5-v112bg-pixel128</h1>
-<div class="sub"><b style="color:#22c55e">v1.12相当の背景処理へ戻した128集中版</b> / 背景は「外周接続背景だけを削る」方向へ戻し、v1.13/1.14系で強くなっていた削りを停止。128は <b>Source128</b> と <b>Pixel128</b> を分離し、Pixel128では減色・透明境界輪郭・軽いノイズ整理を追加します。</div>
+<h1>Sprite Studio Pixel Pipeline v1.14.6-bgfix</h1>
+<div class="sub"><b style="color:#22c55e">背景処理の削りすぎ修正版</b> / v1.12相当ベースを維持しつつ、<b>背景判定を厳しめ</b>に戻し、<b>前景穴埋め</b>と<b>細部復帰</b>を追加しました。128は Source128 と Pixel128 を分離したままです。</div>
 <div class="bar">
   <input id="file" type="file" accept="image/*" />
   <select id="k"><option value="12">Pixel128 色数=12</option><option value="10">Pixel128 色数=10</option><option value="14">Pixel128 色数=14</option><option value="8">Pixel128 色数=8</option></select>
@@ -20,10 +20,10 @@
   <button id="savePixel128" class="save">Pixel128保存</button>
   <button id="summary" class="save">まとめPNG</button>
 </div>
-<div class="notice">変更点: ①背景除去は v1.12 相当（外周接続背景 + 軽い前景復帰）へ戻す ②v1.13で追加した下部サポート面の強制削除は停止 ③128は単純縮小で終わらず、<b>Pixel128</b> で減色・輪郭化・孤立ノイズ整理を行う。64/32はまだ戻しません。</div>
+<div class="notice">今回の主修正: ①背景として削る条件を強くしすぎない ②髪や顔の中に開いた穴を埋める ③髪先・袖先の近傍前景を軽く復帰 ④下部の白い床面は「広く・低彩度・下側」の条件に合う部分だけを除去。</div>
 <div class="grid">
   <div class="card"><h2>0. Original <span id="size" class="pill">no image</span></h2><div class="body"><canvas id="cOriginal"></canvas></div></div>
-  <div class="card"><h2>1. Background Removed <span id="bgInfo" class="pill">v1.12-like</span></h2><div class="body"><canvas id="cCutout" class="checker"></canvas></div></div>
+  <div class="card"><h2>1. Background Removed <span id="bgInfo" class="pill">v1.12+holefix</span></h2><div class="body"><canvas id="cCutout" class="checker"></canvas></div></div>
   <div class="card"><h2>2. Source128 <span class="pill">全体構造保持</span></h2><div class="body"><canvas id="cSource128" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>3. Pixel128 <span class="pill">減色+輪郭</span></h2><div class="body"><canvas id="cPixel128" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>4. Pixel128 Preview <span class="pill">2x表示</span></h2><div class="body"><canvas id="cPixel128Preview" class="checker preview128" width="256" height="256"></canvas></div></div>
@@ -32,11 +32,11 @@
     <div style="min-width:240px"><div class="canvasLabel">BBox / Log</div><div id="log" class="log">画像を選択してください。</div></div>
   </div></div></div>
 </div>
-<div class="footer">v1.14.5: 背景は削りすぎない方向へ戻し、128は Source128 と Pixel128 を分けて確認します。次工程は「Pixel128が良くなったら、その専用ルールを64/32へ段階移植」です。</div>
+<div class="footer">v1.14.6: 背景削りすぎ対策を優先。64/32はまだ戻さず、まず Background Removed の品質を詰めます。</div>
 <script>
 (function(){
 'use strict';
-const VERSION='v1.14.5-v112bg-pixel128';
+const VERSION='v1.14.6-bgfix';
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const distRGB3=(r,g,b,c)=>{const dr=r-c[0],dg=g-c[1],db=b-c[2];return Math.sqrt(dr*dr+dg*dg+db*db)};
@@ -53,49 +53,109 @@ function drawChecker(ctx,w,h,cell=8){ ctx.fillStyle='#111827'; ctx.fillRect(0,0,
 function drawImageOnChecker(target,source,fit=true,pixelated=false){ const ctx=target.getContext('2d'); drawChecker(ctx,target.width,target.height,8); ctx.imageSmoothingEnabled=!pixelated; if(fit){ const s=Math.min(target.width/source.width,target.height/source.height); const dw=Math.max(1,Math.round(source.width*s)); const dh=Math.max(1,Math.round(source.height*s)); ctx.drawImage(source,0,0,source.width,source.height,Math.round((target.width-dw)/2),Math.round((target.height-dh)/2),dw,dh); } else { ctx.drawImage(source,0,0); } }
 function saveCanvas(canvas,name){ if(!canvas||!canvas.width||!canvas.height) return; const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
 
-function sampleBackgroundV112(ctx,w,h){
+function sampleBackground(ctx,w,h){
   const data=ctx.getImageData(0,0,w,h).data;
-  const rs=[],gs=[],bs=[],ls=[];
-  const step=Math.max(1, Math.floor(Math.min(w,h)/100));
+  const rs=[],gs=[],bs=[],ls=[]; const step=Math.max(1, Math.floor(Math.min(w,h)/100));
   function add(x,y){ const i=(y*w+x)*4; if(data[i+3]<8) return; rs.push(data[i]); gs.push(data[i+1]); bs.push(data[i+2]); ls.push(lumOf(data[i],data[i+1],data[i+2])); }
   for(let x=0;x<w;x+=step){ add(x,0); add(x,h-1); if(h>2) add(x,1); }
   for(let y=0;y<h;y+=step){ add(0,y); add(w-1,y); if(w>2) add(1,y); }
   const bg=[median(rs),median(gs),median(bs)];
   const ds=[]; for(let i=0;i<rs.length;i++) ds.push(distRGB3(rs[i],gs[i],bs[i],bg)); ds.sort((a,b)=>a-b);
-  return {color:bg, noise: ds.length?ds[Math.floor(ds.length*0.60)]:0, lum:median(ls), sat:Math.round((rs.length?rs.reduce((s,_,i)=>s+satOf(rs[i],gs[i],bs[i]),0)/rs.length:0))};
+  return {color:bg, noise:ds.length?ds[Math.floor(ds.length*0.60)]:0, lum:median(ls), sat:rs.length?Math.round(rs.reduce((s,_,i)=>s+satOf(rs[i],gs[i],bs[i]),0)/rs.length):0};
 }
 
-function buildBackgroundMaskV112(src,bg){
+function buildBackgroundMask(src,bg){
   const {ctx,w,h}=src; const img=ctx.getImageData(0,0,w,h); const data=img.data;
   const bgMask=new Uint8Array(w*h); const qx=[]; const qy=[];
-  const baseTh=clamp(20 + bg.noise*1.35, 20, 54);
-  function pass(x,y){
+  const baseTh=clamp(18 + bg.noise*1.10, 18, 46);
+  function isBgCandidate(x,y){
     const i=(y*w+x)*4; const a=data[i+3]; if(a<8) return true;
     const r=data[i],g=data[i+1],b=data[i+2]; const d=distRGB3(r,g,b,bg.color); const s=satOf(r,g,b); const l=lumOf(r,g,b);
     if(d<=baseTh) return true;
-    if(d<=baseTh*1.45 && s<22 && Math.abs(l-bg.lum)<28) return true;
-    if((x<w*0.08 || x>w*0.92 || y<h*0.08 || y>h*0.94) && d<baseTh*1.8 && s<26) return true;
+    if(d<=baseTh*1.22 && s<18 && Math.abs(l-bg.lum)<18) return true;
+    if((x<w*0.07||x>w*0.93||y<h*0.07||y>h*0.96) && d<=baseTh*1.55 && s<22 && Math.abs(l-bg.lum)<24) return true;
     return false;
   }
-  function push(x,y){ const idx=y*w+x; if(bgMask[idx]) return; if(!pass(x,y)) return; bgMask[idx]=1; qx.push(x); qy.push(y); }
-  for(let x=0;x<w;x++){ push(x,0); push(x,h-1); } for(let y=0;y<h;y++){ push(0,y); push(w-1,y); }
-  let head=0; while(head<qx.length){ const x=qx[head], y=qy[head++]; if(x>0)push(x-1,y); if(x<w-1)push(x+1,y); if(y>0)push(x,y-1); if(y<h-1)push(x,y+1); }
+  function push(x,y){ const idx=y*w+x; if(bgMask[idx]) return; if(!isBgCandidate(x,y)) return; bgMask[idx]=1; qx.push(x); qy.push(y); }
+  for(let x=0;x<w;x++){ push(x,0); push(x,h-1); }
+  for(let y=0;y<h;y++){ push(0,y); push(w-1,y); }
+  let head=0; while(head<qx.length){ const x=qx[head],y=qy[head++]; if(x>0)push(x-1,y); if(x<w-1)push(x+1,y); if(y>0)push(x,y-1); if(y<h-1)push(x,y+1); }
   return {bgMask, baseTh, img};
 }
 
-function recoverForegroundV112(mask, src, bg, baseTh){
+function recoverForeground(mask, src, bg, baseTh){
   const {ctx,w,h}=src; const data=ctx.getImageData(0,0,w,h).data; const out=mask.slice();
-  for(let pass=0; pass<2; pass++){
+  for(let pass=0; pass<3; pass++){
     const prev=out.slice();
     for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
       const idx=y*w+x; if(prev[idx]) continue;
       let fgN=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; if(prev[(y+dy)*w+(x+dx)]) fgN++; }
-      if(fgN<4) continue;
+      if(fgN<5) continue;
       const i=idx*4; const r=data[i],g=data[i+1],b=data[i+2]; const d=distRGB3(r,g,b,bg.color); const s=satOf(r,g,b); const l=lumOf(r,g,b);
-      if(d>baseTh*0.85 || s>bg.sat+6 || Math.abs(l-bg.lum)>14) out[idx]=1;
+      if(d>baseTh*0.72 || s>bg.sat+4 || Math.abs(l-bg.lum)>10) out[idx]=1;
     }
   }
   return out;
+}
+
+function fillInteriorHoles(mask,w,h,bbox){
+  const minx=Math.max(0,bbox.x-2), miny=Math.max(0,bbox.y-2), maxx=Math.min(w-1,bbox.x+bbox.w+1), maxy=Math.min(h-1,bbox.y+bbox.h+1);
+  const ww=maxx-minx+1, hh=maxy-miny+1; const seen=new Uint8Array(ww*hh); const q=[];
+  function at(x,y){ return mask[(miny+y)*w + (minx+x)]?1:0; }
+  function push(x,y){ const idx=y*ww+x; if(seen[idx]) return; if(at(x,y)) return; seen[idx]=1; q.push(idx); }
+  for(let x=0;x<ww;x++){ push(x,0); push(x,hh-1); }
+  for(let y=0;y<hh;y++){ push(0,y); push(ww-1,y); }
+  for(let head=0; head<q.length; head++){
+    const cur=q[head], x=cur%ww, y=(cur/ww)|0;
+    if(x>0) push(x-1,y); if(x<ww-1) push(x+1,y); if(y>0) push(x,y-1); if(y<hh-1) push(x,y+1);
+  }
+  const out=mask.slice(); let filled=0;
+  for(let y=0;y<hh;y++) for(let x=0;x<ww;x++){
+    const idx=y*ww+x; if(seen[idx]) continue; const gi=(miny+y)*w + (minx+x); if(!out[gi]){ out[gi]=1; filled++; }
+  }
+  return {mask:out, filled};
+}
+
+function recoverThinStructures(mask, src, bg, baseTh){
+  const {ctx,w,h}=src; const data=ctx.getImageData(0,0,w,h).data; const prev=mask.slice(); const out=mask.slice(); let added=0;
+  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+    const idx=y*w+x; if(prev[idx]) continue;
+    let fgN=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; if(prev[(y+dy)*w+(x+dx)]) fgN++; }
+    if(fgN<3) continue;
+    const i=idx*4; const r=data[i],g=data[i+1],b=data[i+2]; const d=distRGB3(r,g,b,bg.color); const s=satOf(r,g,b); const l=lumOf(r,g,b);
+    if(d>baseTh*0.58 || s>bg.sat+3 || Math.abs(l-bg.lum)>8){ out[idx]=1; added++; }
+  }
+  return {mask:out, added};
+}
+
+function removeBottomSupport(mask, src, bg){
+  const {ctx,w,h}=src; const data=ctx.getImageData(0,0,w,h).data; const candidate=new Uint8Array(w*h);
+  for(let y=Math.floor(h*0.68); y<h; y++) for(let x=0;x<w;x++){
+    const idx=y*w+x; if(!mask[idx]) continue; const i=idx*4; const r=data[i],g=data[i+1],b=data[i+2]; const s=satOf(r,g,b); const l=lumOf(r,g,b); const d=distRGB3(r,g,b,bg.color);
+    if(s<26 && l>bg.lum-18 && d<80) candidate[idx]=1;
+  }
+  const labels=new Int32Array(w*h); const comps=[]; let label=0; const q=[];
+  for(let p=0;p<w*h;p++){
+    if(!candidate[p]||labels[p]) continue; label++; let area=0,minx=w,miny=h,maxx=-1,maxy=-1, sumS=0, sumL=0, touchBottom=0;
+    labels[p]=label; q.length=0; q.push(p);
+    for(let head=0; head<q.length; head++){
+      const cur=q[head], x=cur%w, y=(cur/w)|0; area++; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; if(y>=h-2) touchBottom=1;
+      const i=cur*4; sumS += satOf(data[i],data[i+1],data[i+2]); sumL += lumOf(data[i],data[i+1],data[i+2]);
+      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+        if(!dx&&!dy) continue; const xx=x+dx, yy=y+dy; if(xx<0||xx>=w||yy<0||yy>=h) continue; const ni=yy*w+xx; if(candidate[ni]&&!labels[ni]){ labels[ni]=label; q.push(ni); }
+      }
+    }
+    comps[label]={area,minx,maxx,miny,maxy,w:maxx-minx+1,h:maxy-miny+1, avgS:sumS/Math.max(1,area), avgL:sumL/Math.max(1,area), touchBottom};
+  }
+  const out=mask.slice(); let removed=0;
+  for(let l=1;l<comps.length;l++){
+    const c=comps[l]; if(!c) continue;
+    const wide=c.w>w*0.28, flat=c.h<h*0.18, low=c.miny>h*0.72, pale=c.avgS<22, bright=c.avgL>bg.lum-15;
+    if((wide&&flat&&low&&pale&&bright) || (c.touchBottom&&wide&&flat&&pale)){
+      for(let p=0;p<labels.length;p++) if(labels[p]===l){ out[p]=0; removed++; }
+    }
+  }
+  return {mask:out, removed};
 }
 
 function keepMainCharacterComponents(mask,w,h){
@@ -105,25 +165,22 @@ function keepMainCharacterComponents(mask,w,h){
     label++; let area=0,minx=w,miny=h,maxx=-1,maxy=-1;
     labels[p]=label; q.length=0; q.push(p);
     for(let head=0; head<q.length; head++){
-      const cur=q[head], x=cur%w, y=(cur/w)|0; area++;
-      if(x<minx)minx=x; if(y<miny)miny=y; if(x>maxx)maxx=x; if(y>maxy)maxy=y;
+      const cur=q[head], x=cur%w, y=(cur/w)|0; area++; if(x<minx)minx=x; if(y<miny)miny=y; if(x>maxx)maxx=x; if(y>maxy)maxy=y;
       for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
-        if(!dx&&!dy) continue; const xx=x+dx, yy=y+dy; if(xx<0||xx>=w||yy<0||yy>=h) continue;
-        const ni=yy*w+xx; if(mask[ni]&&!labels[ni]){ labels[ni]=label; q.push(ni); }
+        if(!dx&&!dy) continue; const xx=x+dx, yy=y+dy; if(xx<0||xx>=w||yy<0||yy>=h) continue; const ni=yy*w+xx; if(mask[ni]&&!labels[ni]){ labels[ni]=label; q.push(ni); }
       }
     }
     comps[label]={area,minx,miny,maxx,maxy,w:maxx-minx+1,h:maxy-miny+1};
   }
   let main=0, mainArea=0;
-  for(let l=1;l<comps.length;l++){ if(comps[l] && comps[l].area>mainArea){ main=l; mainArea=comps[l].area; } }
+  for(let l=1;l<comps.length;l++) if(comps[l]&&comps[l].area>mainArea){ main=l; mainArea=comps[l].area; }
   if(!main) return {mask,components:0,mainArea:0,kept:0};
-  const mb=comps[main];
-  const out=new Uint8Array(w*h); let kept=0;
+  const mb=comps[main]; const out=new Uint8Array(w*h); let kept=0;
   for(let p=0;p<labels.length;p++){
     const l=labels[p]; if(!l) continue; const c=comps[l];
-    const near=!(c.maxx<mb.minx-24 || c.minx>mb.maxx+24 || c.maxy<mb.miny-30 || c.miny>mb.maxy+30);
-    const slender=(c.area>=10 && (c.w<=8 || c.h<=8));
-    if(l===main || (near && c.area>=14) || (near && slender && c.area>=8)) { out[p]=1; kept++; }
+    const near=!(c.maxx<mb.minx-24||c.minx>mb.maxx+24||c.maxy<mb.miny-30||c.miny>mb.maxy+30);
+    const slender=(c.area>=8 && (c.w<=8 || c.h<=8));
+    if(l===main || (near && c.area>=12) || (near && slender)){ out[p]=1; kept++; }
   }
   return {mask:out,components:label,mainArea,kept};
 }
@@ -138,25 +195,20 @@ function getBBox(mask,w,h){
   for(let x=0;x<w;x++) if(cols[x]>=colMin){ minx=x; break; }
   for(let x=w-1;x>=0;x--) if(cols[x]>=colMin){ maxx=x; break; }
   if(maxx<minx || maxy<miny) return {x:0,y:0,w,h,count};
-  let bw=maxx-minx+1, bh=maxy-miny+1;
-  const padX=Math.max(2, Math.round(bw*0.03)); const padY=Math.max(2, Math.round(bh*0.02));
+  let bw=maxx-minx+1, bh=maxy-miny+1; const padX=Math.max(2,Math.round(bw*0.03)), padY=Math.max(2,Math.round(bh*0.02));
   minx=clamp(minx-padX,0,w-1); maxx=clamp(maxx+padX,0,w-1); miny=clamp(miny-padY,0,h-1); maxy=clamp(maxy+padY,0,h-1);
   return {x:minx,y:miny,w:maxx-minx+1,h:maxy-miny+1,count};
 }
 
 function makeCutoutCanvas(src,mask){
   const {ctx,w,h}=src; const srcImg=ctx.getImageData(0,0,w,h); const out=new ImageData(w,h);
-  for(let p=0;p<w*h;p++){
-    const i=p*4; if(mask[p]){ out.data[i]=srcImg.data[i]; out.data[i+1]=srcImg.data[i+1]; out.data[i+2]=srcImg.data[i+2]; out.data[i+3]=255; }
-    else { out.data[i]=0; out.data[i+1]=0; out.data[i+2]=0; out.data[i+3]=0; }
-  }
+  for(let p=0;p<w*h;p++){ const i=p*4; if(mask[p]){ out.data[i]=srcImg.data[i]; out.data[i+1]=srcImg.data[i+1]; out.data[i+2]=srcImg.data[i+2]; out.data[i+3]=255; } else { out.data[i]=0; out.data[i+1]=0; out.data[i+2]=0; out.data[i+3]=0; } }
   const c=makeCanvas(w,h); c.getContext('2d').putImageData(out,0,0); return c;
 }
 
 function buildSource128(cutout,bbox){
   const c=makeCanvas(128,128); const ctx=c.getContext('2d'); ctx.clearRect(0,0,128,128); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
-  const fit=Math.min(118/bbox.w, 124/bbox.h); const dw=Math.max(1,Math.round(bbox.w*fit)); const dh=Math.max(1,Math.round(bbox.h*fit));
-  const dx=Math.round((128-dw)/2); let dy=128-dh-2; if(dy<2) dy=2;
+  const fit=Math.min(118/bbox.w,124/bbox.h); const dw=Math.max(1,Math.round(bbox.w*fit)); const dh=Math.max(1,Math.round(bbox.h*fit)); const dx=Math.round((128-dw)/2); let dy=128-dh-2; if(dy<2) dy=2;
   ctx.drawImage(cutout,bbox.x,bbox.y,bbox.w,bbox.h,dx,dy,dw,dh);
   return {canvas:c,fit,dw,dh,dx,dy};
 }
@@ -167,119 +219,45 @@ function makeMaskDebug(mask,w,h,bbox){
   ctx.putImageData(img,0,0); ctx.strokeStyle='#f97316'; ctx.lineWidth=Math.max(1,Math.round(Math.min(w,h)/160)); ctx.strokeRect(bbox.x,bbox.y,bbox.w,bbox.h); return c;
 }
 
-function nearestCenter(r,g,b,centers){ let bi=0, bd=1e9; for(let i=0;i<centers.length;i++){ const c=centers[i]; const dr=r-c[0], dg=g-c[1], db=b-c[2]; const d=dr*dr+dg*dg+db*db; if(d<bd){ bd=d; bi=i; } } return bi; }
-
-function extractPaletteKMeans(imgData, k){
-  const d=imgData.data; const pts=[];
-  for(let i=0;i<d.length;i+=4){ if(d[i+3]<32) continue; pts.push([d[i],d[i+1],d[i+2]]); }
-  if(!pts.length) return [[0,0,0]];
-  if(pts.length<=k) return pts;
-  const step=Math.max(1, Math.floor(pts.length/k)); let centers=[];
-  for(let i=0;i<k;i++) centers.push(pts[Math.min(pts.length-1, i*step)] .slice());
-  for(let iter=0; iter<7; iter++){
-    const sums=Array.from({length:k},()=>[0,0,0,0]);
-    for(let p=0;p<pts.length;p++){
-      const q=pts[p]; const idx=nearestCenter(q[0],q[1],q[2],centers); const s=sums[idx]; s[0]+=q[0]; s[1]+=q[1]; s[2]+=q[2]; s[3]++;
-    }
-    for(let i=0;i<k;i++){
-      if(sums[i][3]) centers[i]=[Math.round(sums[i][0]/sums[i][3]), Math.round(sums[i][1]/sums[i][3]), Math.round(sums[i][2]/sums[i][3])];
-    }
-  }
-  const uniq=[]; const seen=new Set();
-  for(const c of centers){ const key=c.join(','); if(!seen.has(key)){ seen.add(key); uniq.push(c); } }
-  return uniq;
-}
-
+function nearestCenter(r,g,b,centers){ let bi=0,bd=1e9; for(let i=0;i<centers.length;i++){ const c=centers[i]; const dr=r-c[0],dg=g-c[1],db=b-c[2]; const d=dr*dr+dg*dg+db*db; if(d<bd){ bd=d; bi=i; } } return bi; }
+function extractPaletteKMeans(imgData,k){ const d=imgData.data; const pts=[]; for(let i=0;i<d.length;i+=4){ if(d[i+3]<32) continue; pts.push([d[i],d[i+1],d[i+2]]); } if(!pts.length) return [[0,0,0]]; if(pts.length<=k) return pts; const step=Math.max(1,Math.floor(pts.length/k)); let centers=[]; for(let i=0;i<k;i++) centers.push(pts[Math.min(pts.length-1,i*step)].slice()); for(let iter=0;iter<7;iter++){ const sums=Array.from({length:k},()=>[0,0,0,0]); for(let p=0;p<pts.length;p++){ const q=pts[p], idx=nearestCenter(q[0],q[1],q[2],centers), s=sums[idx]; s[0]+=q[0]; s[1]+=q[1]; s[2]+=q[2]; s[3]++; } for(let i=0;i<k;i++) if(sums[i][3]) centers[i]=[Math.round(sums[i][0]/sums[i][3]),Math.round(sums[i][1]/sums[i][3]),Math.round(sums[i][2]/sums[i][3])]; } const uniq=[], seen=new Set(); for(const c of centers){ const key=c.join(','); if(!seen.has(key)){ seen.add(key); uniq.push(c); } } return uniq; }
 function colorIndexKey(d,i){ return d[i]+','+d[i+1]+','+d[i+2]+','+d[i+3]; }
-function majorityColorAround(src,w,h,x,y){
-  const count=new Map();
-  for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
-    if(!dx&&!dy) continue; const xx=x+dx, yy=y+dy; if(xx<0||xx>=w||yy<0||yy>=h) continue; const i=(yy*w+xx)*4; if(src[i+3]<32) continue; const key=colorIndexKey(src,i); count.set(key, (count.get(key)||0)+1); }
-  let best=null,bestN=0; for(const [k,v] of count){ if(v>bestN){ best=k; bestN=v; } }
-  return best && bestN>=4 ? best.split(',').map(Number) : null;
-}
+function majorityColorAround(src,w,h,x,y){ const count=new Map(); for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const xx=x+dx, yy=y+dy; if(xx<0||xx>=w||yy<0||yy>=h) continue; const i=(yy*w+xx)*4; if(src[i+3]<32) continue; const key=colorIndexKey(src,i); count.set(key,(count.get(key)||0)+1); } let best=null,bestN=0; for(const [k,v] of count){ if(v>bestN){ best=k; bestN=v; } } return best&&bestN>=4 ? best.split(',').map(Number) : null; }
+function buildPixel128(source128,k){ const w=source128.width, h=source128.height; const ctx=source128.getContext('2d',{willReadFrequently:true}); const img=ctx.getImageData(0,0,w,h); const src=img.data; const pal=extractPaletteKMeans(img,k); const out=new ImageData(w,h); const darkest=pal.slice().sort((a,b)=>lumOf(a[0],a[1],a[2])-lumOf(b[0],b[1],b[2]))[0]||[32,24,28]; for(let p=0;p<w*h;p++){ const i=p*4; const a=src[i+3]; if(a<28) continue; const idx=nearestCenter(src[i],src[i+1],src[i+2],pal); const c=pal[idx]; out.data[i]=c[0]; out.data[i+1]=c[1]; out.data[i+2]=c[2]; out.data[i+3]=a>150?255:(a>70?220:0); } const pass1=out.data.slice(); for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=(y*w+x)*4; if(pass1[i+3]<200) continue; let same=0; const my=colorIndexKey(pass1,i); for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(pass1[ni+3]<200) continue; if(colorIndexKey(pass1,ni)===my) same++; } if(same<=1){ const rep=majorityColorAround(pass1,w,h,x,y); if(rep){ out.data[i]=rep[0]; out.data[i+1]=rep[1]; out.data[i+2]=rep[2]; out.data[i+3]=255; } } } const fillSrc=out.data.slice(); for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=(y*w+x)*4; if(fillSrc[i+3]>0) continue; let near=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(fillSrc[ni+3]>180) near++; } if(near>=5){ const rep=majorityColorAround(fillSrc,w,h,x,y); if(rep){ out.data[i]=rep[0]; out.data[i+1]=rep[1]; out.data[i+2]=rep[2]; out.data[i+3]=220; } } } const edgeSrc=out.data.slice(); for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=(y*w+x)*4; if(edgeSrc[i+3]>0) continue; let near=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(edgeSrc[ni+3]>180) near++; } if(near>=2){ out.data[i]=Math.round(darkest[0]*0.8); out.data[i+1]=Math.round(darkest[1]*0.8); out.data[i+2]=Math.round(darkest[2]*0.8); out.data[i+3]=255; } } const c=makeCanvas(w,h); c.getContext('2d').putImageData(out,0,0); return {canvas:c,palette:pal}; }
 
-function buildPixel128(source128, k){
-  const w=source128.width, h=source128.height; const ctx=source128.getContext('2d', {willReadFrequently:true}); const img=ctx.getImageData(0,0,w,h); const src=img.data;
-  const pal=extractPaletteKMeans(img, k);
-  const out=new ImageData(w,h); const darkest=pal.slice().sort((a,b)=>lumOf(a[0],a[1],a[2])-lumOf(b[0],b[1],b[2]))[0] || [32,24,28];
-  for(let p=0;p<w*h;p++){
-    const i=p*4; const a=src[i+3]; if(a<28) continue;
-    const idx=nearestCenter(src[i],src[i+1],src[i+2],pal); const c=pal[idx]; out.data[i]=c[0]; out.data[i+1]=c[1]; out.data[i+2]=c[2]; out.data[i+3]=a>150?255:(a>70?220:0);
-  }
-  const pass1=out.data.slice();
-  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-    const i=(y*w+x)*4; if(pass1[i+3]<200) continue;
-    let same=0; const my=colorIndexKey(pass1,i);
-    for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
-      if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(pass1[ni+3]<200) continue; if(colorIndexKey(pass1,ni)===my) same++; }
-    if(same<=1){ const rep=majorityColorAround(pass1,w,h,x,y); if(rep){ out.data[i]=rep[0]; out.data[i+1]=rep[1]; out.data[i+2]=rep[2]; out.data[i+3]=255; } }
-  }
-  const fillSrc=out.data.slice();
-  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-    const i=(y*w+x)*4; if(fillSrc[i+3]>0) continue;
-    let near=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(fillSrc[ni+3]>180) near++; }
-    if(near>=5){ const rep=majorityColorAround(fillSrc,w,h,x,y); if(rep){ out.data[i]=rep[0]; out.data[i+1]=rep[1]; out.data[i+2]=rep[2]; out.data[i+3]=220; } }
-  }
-  const edgeSrc=out.data.slice();
-  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-    const i=(y*w+x)*4; if(edgeSrc[i+3]>0) continue;
-    let near=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(edgeSrc[ni+3]>180) near++; }
-    if(near>=2){ out.data[i]=Math.round(darkest[0]*0.8); out.data[i+1]=Math.round(darkest[1]*0.8); out.data[i+2]=Math.round(darkest[2]*0.8); out.data[i+3]=255; }
-  }
-  const c=makeCanvas(w,h); c.getContext('2d').putImageData(out,0,0); return {canvas:c,palette:pal};
-}
-
-function saveSummary(){
-  const orig=$('cOriginal'), cut=$('cCutout'), src=$('cSource128'), px=$('cPixel128'), prev=$('cPixel128Preview'), mask=$('cMask');
-  const c=makeCanvas(1080,560); const ctx=c.getContext('2d'); ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,c.width,c.height); ctx.fillStyle='#e2e8f0'; ctx.font='bold 18px sans-serif'; ctx.fillText('Sprite Studio v1.14.5 v1.12-bg + Pixel128',20,28); ctx.fillStyle='#94a3b8'; ctx.font='12px sans-serif'; ctx.fillText('background reverted to v1.12-like / Source128 + Pixel128 / no 64 or 32 yet',20,48);
-  const cards=[['Original',orig],['Cutout',cut],['Source128',src],['Pixel128',px],['Preview',prev],['Mask',mask]]; let x=20;
-  for(const [label,cv] of cards){ ctx.fillStyle='#111827'; ctx.fillRect(x,70,150,150); ctx.strokeStyle='#334155'; ctx.strokeRect(x,70,150,150); if(cv&&cv.width){ const fit=Math.min(134/cv.width,134/cv.height); const dw=Math.round(cv.width*fit), dh=Math.round(cv.height*fit); ctx.drawImage(cv,0,0,cv.width,cv.height,x+Math.round((150-dw)/2),70+Math.round((150-dh)/2),dw,dh); } ctx.fillStyle='#cbd5e1'; ctx.fillText(label,x,238); x+=176; }
-  ctx.fillStyle='#cbd5e1'; ctx.font='12px ui-monospace,monospace'; const lines=($('log').textContent||'').split('\n').slice(0,16); for(let i=0;i<lines.length;i++) ctx.fillText(lines[i],20,286+i*16);
-  saveCanvas(c,'sprite_summary_v1145_v112bg_pixel128.png');
-}
+function saveSummary(){ const orig=$('cOriginal'), cut=$('cCutout'), src=$('cSource128'), px=$('cPixel128'), prev=$('cPixel128Preview'), mask=$('cMask'); const c=makeCanvas(1080,560); const ctx=c.getContext('2d'); ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,c.width,c.height); ctx.fillStyle='#e2e8f0'; ctx.font='bold 18px sans-serif'; ctx.fillText('Sprite Studio v1.14.6 background fix',20,28); ctx.fillStyle='#94a3b8'; ctx.font='12px sans-serif'; ctx.fillText('stricter fg preservation / interior hole fill / thin-structure recovery / no 64 or 32 yet',20,48); const cards=[['Original',orig],['Cutout',cut],['Source128',src],['Pixel128',px],['Preview',prev],['Mask',mask]]; let x=20; for(const [label,cv] of cards){ ctx.fillStyle='#111827'; ctx.fillRect(x,70,150,150); ctx.strokeStyle='#334155'; ctx.strokeRect(x,70,150,150); if(cv&&cv.width){ const fit=Math.min(134/cv.width,134/cv.height); const dw=Math.round(cv.width*fit), dh=Math.round(cv.height*fit); ctx.drawImage(cv,0,0,cv.width,cv.height,x+Math.round((150-dw)/2),70+Math.round((150-dh)/2),dw,dh); } ctx.fillStyle='#cbd5e1'; ctx.fillText(label,x,238); x+=176; } ctx.fillStyle='#cbd5e1'; ctx.font='12px ui-monospace,monospace'; const lines=($('log').textContent||'').split('\n').slice(0,16); for(let i=0;i<lines.length;i++) ctx.fillText(lines[i],20,286+i*16); saveCanvas(c,'sprite_summary_v1146_bgfix.png'); }
 
 async function render(){
   const input=$('file'); const file=input&&input.files&&input.files[0]; if(!file){ log('画像を選択してください。'); return; }
   try{
     log('128作成中...');
-    const img=await loadImage(file); const src=canvasFromImage(img); $('size').textContent=src.w+'x'+src.h;
-    ensureCanvasSize($('cOriginal'), Math.min(src.w,520), Math.round(Math.min(src.w,520)*src.h/src.w)); drawFitCanvas($('cOriginal'), src.canvas, false);
-    const bg=sampleBackgroundV112(src.ctx,src.w,src.h); const bgRes=buildBackgroundMaskV112(src,bg);
-    let fg=new Uint8Array(src.w*src.h); for(let i=0;i<fg.length;i++) fg[i]=bgRes.bgMask[i]?0:1;
-    fg=recoverForegroundV112(fg,src,bg,bgRes.baseTh); const kept=keepMainCharacterComponents(fg,src.w,src.h); const bbox=getBBox(kept.mask,src.w,src.h);
-    const cutout=makeCutoutCanvas(src,kept.mask); ensureCanvasSize($('cCutout'), Math.min(src.w,520), Math.round(Math.min(src.w,520)*src.h/src.w)); drawImageOnChecker($('cCutout'), cutout, true, false);
-    const source128=buildSource128(cutout,bbox); drawImageOnChecker($('cSource128'), source128.canvas, false, true);
-    const pixel128=buildPixel128(source128.canvas, Number($('k').value||12)); drawImageOnChecker($('cPixel128'), pixel128.canvas, false, true); drawImageOnChecker($('cPixel128Preview'), pixel128.canvas, true, true);
-    ensureCanvasSize($('cMask'), Math.min(src.w,520), Math.round(Math.min(src.w,520)*src.h/src.w)); const mdbg=makeMaskDebug(kept.mask,src.w,src.h,bbox); drawFitCanvas($('cMask'), mdbg, true);
-    window.__SPRITE1145__={version:VERSION, cutout, source128:source128.canvas, pixel128:pixel128.canvas, bbox, bg, palette:pixel128.palette};
+    const img=await loadImage(file); const src=canvasFromImage(img); $('size').textContent=src.w+'x'+src.h; ensureCanvasSize($('cOriginal'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w)); drawFitCanvas($('cOriginal'),src.canvas,false);
+    const bg=sampleBackground(src.ctx,src.w,src.h); const bgRes=buildBackgroundMask(src,bg); let fg=new Uint8Array(src.w*src.h); for(let i=0;i<fg.length;i++) fg[i]=bgRes.bgMask[i]?0:1;
+    fg=recoverForeground(fg,src,bg,bgRes.baseTh); let bbox0=getBBox(fg,src.w,src.h); const holes=fillInteriorHoles(fg,src.w,src.h,bbox0); fg=holes.mask; const thin=recoverThinStructures(fg,src,bg,bgRes.baseTh); fg=thin.mask; const floor=removeBottomSupport(fg,src,bg); fg=floor.mask; const kept=keepMainCharacterComponents(fg,src.w,src.h); const bbox=getBBox(kept.mask,src.w,src.h);
+    const cutout=makeCutoutCanvas(src,kept.mask); ensureCanvasSize($('cCutout'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w)); drawImageOnChecker($('cCutout'),cutout,true,false);
+    const source128=buildSource128(cutout,bbox); drawImageOnChecker($('cSource128'),source128.canvas,false,true); const pixel128=buildPixel128(source128.canvas,Number($('k').value||12)); drawImageOnChecker($('cPixel128'),pixel128.canvas,false,true); drawImageOnChecker($('cPixel128Preview'),pixel128.canvas,true,true);
+    ensureCanvasSize($('cMask'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w)); const mdbg=makeMaskDebug(kept.mask,src.w,src.h,bbox); drawFitCanvas($('cMask'),mdbg,true);
+    window.__SPRITE1146__={version:VERSION, cutout, source128:source128.canvas, pixel128:pixel128.canvas, bbox, bg, palette:pixel128.palette};
     $('bgInfo').textContent='bg '+bg.color.map(v=>v|0).join(',');
     log([
       'Sprite Output: '+VERSION,
-      'mode: v1.12相当背景処理 + Source128 + Pixel128',
-      'background: edge median + outer connected flood + light foreground recovery',
-      'stopped: v1.13 support-surface cleanup / v1.14 aggressive bg削り',
+      'mode: background削りすぎ修正 + Source128 + Pixel128',
+      'background: outer connected flood + conservative bg threshold',
+      'added: interior-hole fill / thin-structure recovery / limited bottom-support removal',
       'source size: '+src.w+'x'+src.h,
       'bg rgb: '+bg.color.map(v=>v|0).join(', ')+' / noise60='+bg.noise.toFixed(1)+' / threshold='+bgRes.baseTh.toFixed(1),
       'bbox: x='+bbox.x+', y='+bbox.y+', w='+bbox.w+', h='+bbox.h+', maskArea='+bbox.count,
       'source128 draw: '+source128.dw+'x'+source128.dh+' @ '+source128.dx+','+source128.dy,
+      'hole fill: '+holes.filled+' px / thin recover: '+thin.added+' px / floor removed: '+floor.removed+' px',
       'pixel128 palette: '+pixel128.palette.length+' colors',
       'components: '+kept.components+' / mainArea='+kept.mainArea,
-      'next: まず Background Removed と Pixel128 が良いか確認。良ければ次に Pixel128 ルールを64/32へ移植する'
+      'next: Background Removed の削れ方を確認。OKなら Pixel128 の顔可読性を詰める'
     ]);
-  }catch(err){ console.error(err); log(['v1.14.5 error', String(err&&err.message||err)]); }
+  }catch(err){ console.error(err); log(['v1.14.6 error', String(err&&err.message||err)]); }
 }
 
-function boot(){
-  const run=$('run'); if(run) run.addEventListener('click', render);
-  const input=$('file'); if(input) input.addEventListener('change', ()=>setTimeout(render,80));
-  const k=$('k'); if(k) k.addEventListener('change', ()=>{ if(window.__SPRITE1145__&&$('file').files&&$('file').files[0]) render(); });
-  const s1=$('saveSource128'); if(s1) s1.addEventListener('click', ()=>saveCanvas(window.__SPRITE1145__&&window.__SPRITE1145__.source128, 'source128_v1145.png'));
-  const s2=$('savePixel128'); if(s2) s2.addEventListener('click', ()=>saveCanvas(window.__SPRITE1145__&&window.__SPRITE1145__.pixel128, 'pixel128_v1145.png'));
-  const sm=$('summary'); if(sm) sm.addEventListener('click', saveSummary);
-  log('v1.14.5 ready。画像を選択すると自動で背景除去→Source128→Pixel128 を作成します。');
-}
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+function boot(){ const run=$('run'); if(run) run.addEventListener('click',render); const input=$('file'); if(input) input.addEventListener('change',()=>setTimeout(render,80)); const k=$('k'); if(k) k.addEventListener('change',()=>{ if(window.__SPRITE1146__&&$('file').files&&$('file').files[0]) render(); }); const s1=$('saveSource128'); if(s1) s1.addEventListener('click',()=>saveCanvas(window.__SPRITE1146__&&window.__SPRITE1146__.source128,'source128_v1146.png')); const s2=$('savePixel128'); if(s2) s2.addEventListener('click',()=>saveCanvas(window.__SPRITE1146__&&window.__SPRITE1146__.pixel128,'pixel128_v1146.png')); const sm=$('summary'); if(sm) sm.addEventListener('click',saveSummary); log('v1.14.6 ready。画像を選択すると自動で背景除去→Source128→Pixel128 を作成します。'); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
 </body>
