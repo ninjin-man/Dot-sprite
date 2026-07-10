@@ -3,47 +3,65 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Sprite Studio Pixel Pipeline v1.14.6-bgfix</title>
+<title>Sprite Studio v1.14.7 post128-controls</title>
 <style>
-:root{--bg:#0f172a;--panel:#1e293b;--panel2:#111827;--line:#334155;--text:#e2e8f0;--muted:#94a3b8}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:14px;padding-bottom:40px}h1{font-size:20px;margin:0 0 4px}.sub{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px}.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px;margin:10px 0}button,input,select{font:inherit}button{border:1px solid var(--line);border-radius:12px;background:#22304a;color:var(--text);padding:9px 12px;font-weight:700}button.primary{background:#0f766e;border-color:#14b8a6}button.save{background:#1d4ed8;border-color:#60a5fa}button:active{transform:translateY(1px)}input[type=file]{max-width:100%;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}.card h2{font-size:16px;margin:0;padding:10px 12px;background:#22304a;display:flex;justify-content:space-between;gap:8px;align-items:center}.card .body{padding:10px}.card canvas{display:block;max-width:100%;background:#0b1020;border:1px solid var(--line);border-radius:8px}.wide{grid-column:1/-1}.pill{font-size:12px;color:#cbd5e1;background:#0f172a;border:1px solid var(--line);border-radius:999px;padding:3px 8px;white-space:nowrap}.log{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;color:#cbd5e1;background:#0b1020;border:1px solid var(--line);border-radius:12px;padding:10px;max-height:260px;overflow:auto}.outputs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-items:start}.canvasLabel{font-size:12px;color:#cbd5e1;margin-bottom:4px}.preview128{width:256px;height:256px;image-rendering:pixelated}.actual128{width:128px;height:128px;image-rendering:pixelated}.maskPreview{width:256px;height:256px;image-rendering:pixelated}.checker{background-color:#111827;background-image:linear-gradient(45deg,#1e293b 25%,transparent 25%),linear-gradient(-45deg,#1e293b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1e293b 75%),linear-gradient(-45deg,transparent 75%,#1e293b 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}.notice{border:1px solid #164e63;background:#082f49;border-radius:14px;padding:10px;margin:10px 0;color:#dbeafe;font-size:13px;line-height:1.55}.footer{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}@media(max-width:640px){body{padding:10px}.grid{grid-template-columns:1fr}.preview128{width:100%;height:auto}.bar button{flex:1 1 auto}}
+:root{--bg:#0f172a;--panel:#1e293b;--panel2:#111827;--line:#334155;--text:#e2e8f0;--muted:#94a3b8;--active:#0f766e;--activeLine:#14b8a6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:14px;padding-bottom:40px}h1{font-size:20px;margin:0 0 4px}.sub{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px}.bar,.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px;margin:10px 0}button,input,select{font:inherit}button{border:1px solid var(--line);border-radius:12px;background:#22304a;color:var(--text);padding:9px 12px;font-weight:700}button.primary{background:#1d4ed8;border-color:#60a5fa}button.toggle.active{background:var(--active);border-color:var(--activeLine)}button.save{background:#334155;border-color:#64748b}button:active{transform:translateY(1px)}input[type=file]{max-width:100%;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}.card h2{font-size:16px;margin:0;padding:10px 12px;background:#22304a;display:flex;justify-content:space-between;gap:8px;align-items:center}.card .body{padding:10px}.card canvas{display:block;max-width:100%;background:#0b1020;border:1px solid var(--line);border-radius:8px}.wide{grid-column:1/-1}.pill{font-size:12px;color:#cbd5e1;background:#0f172a;border:1px solid var(--line);border-radius:999px;padding:3px 8px;white-space:nowrap}.log{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;color:#cbd5e1;background:#0b1020;border:1px solid var(--line);border-radius:12px;padding:10px;max-height:280px;overflow:auto}.preview{width:256px;height:256px;image-rendering:pixelated}.actual128{width:128px;height:128px;image-rendering:pixelated}.checker{background-color:#111827;background-image:linear-gradient(45deg,#1e293b 25%,transparent 25%),linear-gradient(-45deg,#1e293b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1e293b 75%),linear-gradient(-45deg,transparent 75%,#1e293b 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}.notice{border:1px solid #164e63;background:#082f49;border-radius:14px;padding:10px;margin:10px 0;color:#dbeafe;font-size:13px;line-height:1.55}.mini{font-size:12px;color:var(--muted)}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.spacer{flex:1}.footer{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}@media(max-width:640px){body{padding:10px}.grid{grid-template-columns:1fr}.preview{width:100%;height:auto}.bar button,.controls button{flex:1 1 auto}}
 </style>
 </head>
 <body>
-<h1>Sprite Studio Pixel Pipeline v1.14.6-bgfix</h1>
-<div class="sub"><b style="color:#22c55e">背景処理の削りすぎ修正版</b> / v1.12相当ベースを維持しつつ、<b>背景判定を厳しめ</b>に戻し、<b>前景穴埋め</b>と<b>細部復帰</b>を追加しました。128は Source128 と Pixel128 を分離したままです。</div>
+<h1>Sprite Studio v1.14.7 post128-controls</h1>
+<div class="sub"><b style="color:#22c55e">検証版</b> / 結果を決め打ちせず、128化後の各処理を個別にON/OFFできます。<b>ノイズ削除・濃色化・減色・輪郭追加</b>をボタンで切り替え、どれが有効かを見ながら判断してください。</div>
 <div class="bar">
   <input id="file" type="file" accept="image/*" />
-  <select id="k"><option value="12">Pixel128 色数=12</option><option value="10">Pixel128 色数=10</option><option value="14">Pixel128 色数=14</option><option value="8">Pixel128 色数=8</option></select>
-  <button id="run" class="primary">128作成</button>
+  <button id="run" class="primary">再実行</button>
   <button id="saveSource128" class="save">Source128保存</button>
-  <button id="savePixel128" class="save">Pixel128保存</button>
+  <button id="saveCurrent" class="save">現在結果保存</button>
   <button id="summary" class="save">まとめPNG</button>
 </div>
-<div class="notice">今回の主修正: ①背景として削る条件を強くしすぎない ②髪や顔の中に開いた穴を埋める ③髪先・袖先の近傍前景を軽く復帰 ④下部の白い床面は「広く・低彩度・下側」の条件に合う部分だけを除去。</div>
+<div class="controls">
+  <button id="btnCleanup" class="toggle active">ノイズ削除 ON</button>
+  <button id="btnBoost" class="toggle">色を濃くする OFF</button>
+  <button id="btnQuant" class="toggle active">減色 ON</button>
+  <button id="btnOutline" class="toggle active">輪郭追加 ON</button>
+  <div class="row">
+    <span class="mini">色数</span>
+    <select id="k"><option value="12">12</option><option value="10">10</option><option value="14">14</option><option value="8">8</option><option value="16">16</option></select>
+  </div>
+  <div class="row">
+    <span class="mini">濃色化</span>
+    <select id="boostLevel"><option value="1.10">弱</option><option value="1.18" selected>中</option><option value="1.28">強</option></select>
+  </div>
+  <div class="spacer"></div>
+  <button id="presetRaw">比較: Source128のみ</button>
+  <button id="presetAll">比較: 全処理ON</button>
+</div>
+<div class="notice">使い方: まず <b>Source128</b> を基準に見ます。その後、各ボタンをON/OFFして <b>Final128</b> がどう変わるかを確認してください。もし「減色で消える」「濃色化で読みやすくなる」などが見えれば、その処理だけ残す方針にできます。</div>
 <div class="grid">
   <div class="card"><h2>0. Original <span id="size" class="pill">no image</span></h2><div class="body"><canvas id="cOriginal"></canvas></div></div>
-  <div class="card"><h2>1. Background Removed <span id="bgInfo" class="pill">v1.12+holefix</span></h2><div class="body"><canvas id="cCutout" class="checker"></canvas></div></div>
-  <div class="card"><h2>2. Source128 <span class="pill">全体構造保持</span></h2><div class="body"><canvas id="cSource128" class="checker actual128" width="128" height="128"></canvas></div></div>
-  <div class="card"><h2>3. Pixel128 <span class="pill">減色+輪郭</span></h2><div class="body"><canvas id="cPixel128" class="checker actual128" width="128" height="128"></canvas></div></div>
-  <div class="card"><h2>4. Pixel128 Preview <span class="pill">2x表示</span></h2><div class="body"><canvas id="cPixel128Preview" class="checker preview128" width="256" height="256"></canvas></div></div>
-  <div class="card wide"><h2>5. Debug / 次の判断</h2><div class="body"><div class="outputs">
-    <div><div class="canvasLabel">Mask debug</div><canvas id="cMask" class="maskPreview"></canvas></div>
-    <div style="min-width:240px"><div class="canvasLabel">BBox / Log</div><div id="log" class="log">画像を選択してください。</div></div>
-  </div></div></div>
+  <div class="card"><h2>1. Background Removed <span id="bgInfo" class="pill">base</span></h2><div class="body"><canvas id="cCutout" class="checker"></canvas></div></div>
+  <div class="card"><h2>2. Source128 <span class="pill">基準</span></h2><div class="body"><canvas id="cSource128" class="checker actual128" width="128" height="128"></canvas></div></div>
+  <div class="card"><h2>3. Step Cleanup</h2><div class="body"><canvas id="cCleanup" class="checker actual128" width="128" height="128"></canvas></div></div>
+  <div class="card"><h2>4. Step Color Boost</h2><div class="body"><canvas id="cBoost" class="checker actual128" width="128" height="128"></canvas></div></div>
+  <div class="card"><h2>5. Step Quantize</h2><div class="body"><canvas id="cQuant" class="checker actual128" width="128" height="128"></canvas></div></div>
+  <div class="card"><h2>6. Final128 <span id="modeInfo" class="pill">current</span></h2><div class="body"><canvas id="cFinal" class="checker actual128" width="128" height="128"></canvas></div></div>
+  <div class="card"><h2>7. Final Preview</h2><div class="body"><canvas id="cPreview" class="checker preview" width="256" height="256"></canvas></div></div>
+  <div class="card wide"><h2>8. Log / 判断メモ</h2><div class="body"><div id="log" class="log">画像を選択してください。</div></div></div>
 </div>
-<div class="footer">v1.14.6: 背景削りすぎ対策を優先。64/32はまだ戻さず、まず Background Removed の品質を詰めます。</div>
+<div class="footer">v1.14.7: 背景除去は素材保護重視のベース処理。今は「128化後の各処理が有効か」をボタンで検証する段階です。</div>
 <script>
 (function(){
 'use strict';
-const VERSION='v1.14.6-bgfix';
+const VERSION='v1.14.7-post128-controls';
 const $=id=>document.getElementById(id);
+const state={cleanup:true,boost:false,quant:true,outline:true,last:null};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const distRGB3=(r,g,b,c)=>{const dr=r-c[0],dg=g-c[1],db=b-c[2];return Math.sqrt(dr*dr+dg*dg+db*db)};
 const satOf=(r,g,b)=>Math.max(r,g,b)-Math.min(r,g,b);
 const lumOf=(r,g,b)=>0.299*r+0.587*g+0.114*b;
 function median(arr){ if(!arr.length) return 0; const a=arr.slice().sort((x,y)=>x-y); return a[(a.length/2)|0]; }
 function makeCanvas(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+function cloneCanvas(src){ const c=makeCanvas(src.width,src.height); c.getContext('2d').drawImage(src,0,0); return c; }
 function ensureCanvasSize(c,w,h){ if(c.width!==w)c.width=w; if(c.height!==h)c.height=h; }
 function log(lines){ const el=$('log'); if(el) el.textContent=Array.isArray(lines)?lines.join('\n'):String(lines); }
 function loadImage(file){ return new Promise((resolve,reject)=>{ const url=URL.createObjectURL(file); const img=new Image(); img.onload=()=>{URL.revokeObjectURL(url);resolve(img)}; img.onerror=e=>{URL.revokeObjectURL(url);reject(e)}; img.src=url; }); }
@@ -52,212 +70,78 @@ function drawFitCanvas(target,source,pixelated=false){ if(!target||!source) retu
 function drawChecker(ctx,w,h,cell=8){ ctx.fillStyle='#111827'; ctx.fillRect(0,0,w,h); for(let y=0;y<h;y+=cell){ for(let x=0;x<w;x+=cell){ ctx.fillStyle=((x/cell+y/cell)&1)?'#1e293b':'#0b1020'; ctx.fillRect(x,y,cell,cell); } } }
 function drawImageOnChecker(target,source,fit=true,pixelated=false){ const ctx=target.getContext('2d'); drawChecker(ctx,target.width,target.height,8); ctx.imageSmoothingEnabled=!pixelated; if(fit){ const s=Math.min(target.width/source.width,target.height/source.height); const dw=Math.max(1,Math.round(source.width*s)); const dh=Math.max(1,Math.round(source.height*s)); ctx.drawImage(source,0,0,source.width,source.height,Math.round((target.width-dw)/2),Math.round((target.height-dh)/2),dw,dh); } else { ctx.drawImage(source,0,0); } }
 function saveCanvas(canvas,name){ if(!canvas||!canvas.width||!canvas.height) return; const a=document.createElement('a'); a.href=canvas.toDataURL('image/png'); a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
+function setToggleButton(id,on,labelOn,labelOff){ const b=$(id); b.classList.toggle('active',on); b.textContent=(on?labelOn:labelOff); }
+function updateToggleButtons(){ setToggleButton('btnCleanup',state.cleanup,'ノイズ削除 ON','ノイズ削除 OFF'); setToggleButton('btnBoost',state.boost,'色を濃くする ON','色を濃くする OFF'); setToggleButton('btnQuant',state.quant,'減色 ON','減色 OFF'); setToggleButton('btnOutline',state.outline,'輪郭追加 ON','輪郭追加 OFF'); }
 
-function sampleBackground(ctx,w,h){
-  const data=ctx.getImageData(0,0,w,h).data;
-  const rs=[],gs=[],bs=[],ls=[]; const step=Math.max(1, Math.floor(Math.min(w,h)/100));
-  function add(x,y){ const i=(y*w+x)*4; if(data[i+3]<8) return; rs.push(data[i]); gs.push(data[i+1]); bs.push(data[i+2]); ls.push(lumOf(data[i],data[i+1],data[i+2])); }
-  for(let x=0;x<w;x+=step){ add(x,0); add(x,h-1); if(h>2) add(x,1); }
-  for(let y=0;y<h;y+=step){ add(0,y); add(w-1,y); if(w>2) add(1,y); }
-  const bg=[median(rs),median(gs),median(bs)];
-  const ds=[]; for(let i=0;i<rs.length;i++) ds.push(distRGB3(rs[i],gs[i],bs[i],bg)); ds.sort((a,b)=>a-b);
-  return {color:bg, noise:ds.length?ds[Math.floor(ds.length*0.60)]:0, lum:median(ls), sat:rs.length?Math.round(rs.reduce((s,_,i)=>s+satOf(rs[i],gs[i],bs[i]),0)/rs.length):0};
+/* base background removal: conservative material-preserving version */
+function sampleBackground(ctx,w,h){ const data=ctx.getImageData(0,0,w,h).data; const rs=[],gs=[],bs=[],ls=[]; const step=Math.max(1,Math.floor(Math.min(w,h)/100)); function add(x,y){ const i=(y*w+x)*4; if(data[i+3]<8) return; rs.push(data[i]); gs.push(data[i+1]); bs.push(data[i+2]); ls.push(lumOf(data[i],data[i+1],data[i+2])); } for(let x=0;x<w;x+=step){ add(x,0); add(x,h-1); if(h>2) add(x,1);} for(let y=0;y<h;y+=step){ add(0,y); add(w-1,y); if(w>2) add(1,y);} const bg=[median(rs),median(gs),median(bs)]; const ds=[]; for(let i=0;i<rs.length;i++) ds.push(distRGB3(rs[i],gs[i],bs[i],bg)); ds.sort((a,b)=>a-b); return {color:bg, noise:ds.length?ds[Math.floor(ds.length*0.60)]:0, lum:median(ls), sat:rs.length?Math.round(rs.reduce((s,_,i)=>s+satOf(rs[i],gs[i],bs[i]),0)/rs.length):0}; }
+function buildBackgroundMask(src,bg){ const {ctx,w,h}=src; const img=ctx.getImageData(0,0,w,h); const data=img.data; const bgMask=new Uint8Array(w*h); const qx=[],qy=[]; const baseTh=clamp(18+bg.noise*1.10,18,46); function isBg(x,y){ const i=(y*w+x)*4; const a=data[i+3]; if(a<8) return true; const r=data[i],g=data[i+1],b=data[i+2], d=distRGB3(r,g,b,bg.color), s=satOf(r,g,b), l=lumOf(r,g,b); if(d<=baseTh) return true; if(d<=baseTh*1.22 && s<18 && Math.abs(l-bg.lum)<18) return true; if((x<w*0.07||x>w*0.93||y<h*0.07||y>h*0.96) && d<=baseTh*1.55 && s<22 && Math.abs(l-bg.lum)<24) return true; return false; } function push(x,y){ const idx=y*w+x; if(bgMask[idx]) return; if(!isBg(x,y)) return; bgMask[idx]=1; qx.push(x); qy.push(y);} for(let x=0;x<w;x++){ push(x,0); push(x,h-1);} for(let y=0;y<h;y++){ push(0,y); push(w-1,y);} let head=0; while(head<qx.length){ const x=qx[head],y=qy[head++]; if(x>0)push(x-1,y); if(x<w-1)push(x+1,y); if(y>0)push(x,y-1); if(y<h-1)push(x,y+1);} return {bgMask,baseTh,img}; }
+function recoverForeground(mask,src,bg,baseTh){ const {ctx,w,h}=src; const data=ctx.getImageData(0,0,w,h).data; const out=mask.slice(); for(let pass=0;pass<3;pass++){ const prev=out.slice(); for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const idx=y*w+x; if(prev[idx]) continue; let fgN=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; if(prev[(y+dy)*w+(x+dx)]) fgN++; } if(fgN<5) continue; const i=idx*4; const r=data[i],g=data[i+1],b=data[i+2], d=distRGB3(r,g,b,bg.color), s=satOf(r,g,b), l=lumOf(r,g,b); if(d>baseTh*0.72 || s>bg.sat+4 || Math.abs(l-bg.lum)>10) out[idx]=1; }} return out; }
+function getBBox(mask,w,h){ let minx=w,miny=h,maxx=-1,maxy=-1,count=0; const rows=new Int32Array(h), cols=new Int32Array(w); for(let y=0;y<h;y++) for(let x=0;x<w;x++){ if(!mask[y*w+x]) continue; rows[y]++; cols[x]++; count++; } if(!count) return {x:0,y:0,w:h,h:w,count:0}; const rowMin=Math.max(1,Math.floor(w*0.004)), colMin=Math.max(1,Math.floor(h*0.003)); for(let y=0;y<h;y++) if(rows[y]>=rowMin){ miny=y; break; } for(let y=h-1;y>=0;y--) if(rows[y]>=rowMin){ maxy=y; break; } for(let x=0;x<w;x++) if(cols[x]>=colMin){ minx=x; break; } for(let x=w-1;x>=0;x--) if(cols[x]>=colMin){ maxx=x; break; } let bw=maxx-minx+1, bh=maxy-miny+1; const padX=Math.max(2,Math.round(bw*0.03)), padY=Math.max(2,Math.round(bh*0.02)); minx=clamp(minx-padX,0,w-1); maxx=clamp(maxx+padX,0,w-1); miny=clamp(miny-padY,0,h-1); maxy=clamp(maxy+padY,0,h-1); return {x:minx,y:miny,w:maxx-minx+1,h:maxy-miny+1,count}; }
+function fillInteriorHoles(mask,w,h,bbox){ const minx=Math.max(0,bbox.x-2), miny=Math.max(0,bbox.y-2), maxx=Math.min(w-1,bbox.x+bbox.w+1), maxy=Math.min(h-1,bbox.y+bbox.h+1); const ww=maxx-minx+1, hh=maxy-miny+1; const seen=new Uint8Array(ww*hh), q=[]; function at(x,y){ return mask[(miny+y)*w+(minx+x)]?1:0;} function push(x,y){ const idx=y*ww+x; if(seen[idx]) return; if(at(x,y)) return; seen[idx]=1; q.push(idx);} for(let x=0;x<ww;x++){ push(x,0); push(x,hh-1);} for(let y=0;y<hh;y++){ push(0,y); push(ww-1,y);} for(let head=0;head<q.length;head++){ const cur=q[head],x=cur%ww,y=(cur/ww)|0; if(x>0)push(x-1,y); if(x<ww-1)push(x+1,y); if(y>0)push(x,y-1); if(y<hh-1)push(x,y+1);} const out=mask.slice(); for(let y=0;y<hh;y++) for(let x=0;x<ww;x++){ const idx=y*ww+x; if(seen[idx]) continue; const gi=(miny+y)*w+(minx+x); out[gi]=1; } return out; }
+function removeBottomSupport(mask,src,bg){ const {ctx,w,h}=src; const data=ctx.getImageData(0,0,w,h).data; const candidate=new Uint8Array(w*h); for(let y=Math.floor(h*0.68);y<h;y++) for(let x=0;x<w;x++){ const idx=y*w+x; if(!mask[idx]) continue; const i=idx*4; const r=data[i],g=data[i+1],b=data[i+2], s=satOf(r,g,b), l=lumOf(r,g,b), d=distRGB3(r,g,b,bg.color); if(s<26 && l>bg.lum-18 && d<80) candidate[idx]=1; } const labels=new Int32Array(w*h), comps=[]; let label=0; const q=[]; for(let p=0;p<w*h;p++){ if(!candidate[p]||labels[p]) continue; label++; let area=0,minx=w,miny=h,maxx=-1,maxy=-1,sumS=0,sumL=0,touchBottom=0; labels[p]=label; q.length=0; q.push(p); for(let head=0;head<q.length;head++){ const cur=q[head],x=cur%w,y=(cur/w)|0; area++; if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;if(y>=h-2)touchBottom=1; const i=cur*4; sumS+=satOf(data[i],data[i+1],data[i+2]); sumL+=lumOf(data[i],data[i+1],data[i+2]); for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const xx=x+dx,yy=y+dy; if(xx<0||xx>=w||yy<0||yy>=h) continue; const ni=yy*w+xx; if(candidate[ni]&&!labels[ni]){ labels[ni]=label; q.push(ni); } } } comps[label]={area,minx,maxx,miny,maxy,w:maxx-minx+1,h:maxy-miny+1,avgS:sumS/Math.max(1,area),avgL:sumL/Math.max(1,area),touchBottom}; } const out=mask.slice(); for(let l=1;l<comps.length;l++){ const c=comps[l]; if(!c) continue; const wide=c.w>w*0.28, flat=c.h<h*0.18, low=c.miny>h*0.72, pale=c.avgS<22, bright=c.avgL>bg.lum-15; if((wide&&flat&&low&&pale&&bright)||(c.touchBottom&&wide&&flat&&pale)){ for(let p=0;p<labels.length;p++) if(labels[p]===l) out[p]=0; } } return out; }
+function keepMainCharacterComponents(mask,w,h){ const labels=new Int32Array(w*h); let label=0; const comps=[], q=[]; for(let p=0;p<w*h;p++){ if(!mask[p]||labels[p]) continue; label++; let area=0,minx=w,miny=h,maxx=-1,maxy=-1; labels[p]=label; q.length=0; q.push(p); for(let head=0;head<q.length;head++){ const cur=q[head],x=cur%w,y=(cur/w)|0; area++; if(x<minx)minx=x;if(y<miny)miny=y;if(x>maxx)maxx=x;if(y>maxy)maxy=y; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const xx=x+dx,yy=y+dy; if(xx<0||xx>=w||yy<0||yy>=h) continue; const ni=yy*w+xx; if(mask[ni]&&!labels[ni]){ labels[ni]=label; q.push(ni); } } } comps[label]={area,minx,miny,maxx,maxy,w:maxx-minx+1,h:maxy-miny+1}; } let main=0,mainArea=0; for(let l=1;l<comps.length;l++) if(comps[l]&&comps[l].area>mainArea){ main=l; mainArea=comps[l].area; } const mb=comps[main]||{minx:0,miny:0,maxx:w-1,maxy:h-1}; const out=new Uint8Array(w*h); for(let p=0;p<labels.length;p++){ const l=labels[p]; if(!l) continue; const c=comps[l]; const near=!(c.maxx<mb.minx-24||c.minx>mb.maxx+24||c.maxy<mb.miny-30||c.miny>mb.maxy+30); const slender=(c.area>=8&&(c.w<=8||c.h<=8)); if(l===main||(near&&c.area>=12)||(near&&slender)) out[p]=1; } return {mask:out, components:label, mainArea}; }
+function makeCutoutCanvas(src,mask){ const {ctx,w,h}=src; const srcImg=ctx.getImageData(0,0,w,h); const out=new ImageData(w,h); for(let p=0;p<w*h;p++){ const i=p*4; if(mask[p]){ out.data[i]=srcImg.data[i]; out.data[i+1]=srcImg.data[i+1]; out.data[i+2]=srcImg.data[i+2]; out.data[i+3]=255;} } const c=makeCanvas(w,h); c.getContext('2d').putImageData(out,0,0); return c; }
+function buildSource128(cutout,bbox){ const c=makeCanvas(128,128); const ctx=c.getContext('2d'); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; const fit=Math.min(118/bbox.w,124/bbox.h); const dw=Math.max(1,Math.round(bbox.w*fit)); const dh=Math.max(1,Math.round(bbox.h*fit)); const dx=Math.round((128-dw)/2); let dy=128-dh-2; if(dy<2) dy=2; ctx.drawImage(cutout,bbox.x,bbox.y,bbox.w,bbox.h,dx,dy,dw,dh); return {canvas:c, dw, dh, dx, dy}; }
+
+/* post128 stages */
+function getImageData(canvas){ return canvas.getContext('2d',{willReadFrequently:true}).getImageData(0,0,canvas.width,canvas.height); }
+function canvasFromImageData(img){ const c=makeCanvas(img.width,img.height); c.getContext('2d').putImageData(img,0,0); return c; }
+function stageCleanup(input){ const img=getImageData(input); const d=img.data, w=img.width, h=img.height; const out=new ImageData(new Uint8ClampedArray(d),w,h); const src=out.data; for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=(y*w+x)*4; if(src[i+3]<180) continue; let near=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(src[ni+3]>180) near++; } if(near<=1){ const rep=majorityOpaqueAround(src,w,h,x,y); if(rep){ src[i]=rep[0]; src[i+1]=rep[1]; src[i+2]=rep[2]; src[i+3]=255; } else { src[i+3]=0; } } }
+  // fringe cleanup
+  const pass=src.slice(); for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=(y*w+x)*4; if(pass[i+3]>=180) continue; let near=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(pass[ni+3]>180) near++; } if(near>=5){ const rep=majorityOpaqueAround(pass,w,h,x,y); if(rep){ src[i]=rep[0]; src[i+1]=rep[1]; src[i+2]=rep[2]; src[i+3]=220; } } }
+  return canvasFromImageData(out); }
+function stageBoost(input,level){ const img=getImageData(input); const d=img.data; for(let i=0;i<d.length;i+=4){ if(d[i+3]<20) continue; let r=d[i],g=d[i+1],b=d[i+2]; const avg=(r+g+b)/3; r=clamp(avg+(r-avg)*level - 4,0,255); g=clamp(avg+(g-avg)*level - 4,0,255); b=clamp(avg+(b-avg)*level - 4,0,255); d[i]=r; d[i+1]=g; d[i+2]=b; } return canvasFromImageData(img); }
+function nearestCenter(r,g,b,centers){ let bi=0,bd=1e9; for(let i=0;i<centers.length;i++){ const c=centers[i]; const dr=r-c[0],dg=g-c[1],db=b-c[2], dd=dr*dr+dg*dg+db*db; if(dd<bd){ bd=dd; bi=i; } } return bi; }
+function extractPaletteKMeans(imgData,k){ const d=imgData.data, pts=[]; for(let i=0;i<d.length;i+=4){ if(d[i+3]<32) continue; pts.push([d[i],d[i+1],d[i+2]]); } if(!pts.length) return [[0,0,0]]; if(pts.length<=k) return pts; const step=Math.max(1,Math.floor(pts.length/k)); let centers=[]; for(let i=0;i<k;i++) centers.push(pts[Math.min(pts.length-1,i*step)].slice()); for(let iter=0;iter<7;iter++){ const sums=Array.from({length:k},()=>[0,0,0,0]); for(let p=0;p<pts.length;p++){ const q=pts[p], idx=nearestCenter(q[0],q[1],q[2],centers), s=sums[idx]; s[0]+=q[0]; s[1]+=q[1]; s[2]+=q[2]; s[3]++; } for(let i=0;i<k;i++) if(sums[i][3]) centers[i]=[Math.round(sums[i][0]/sums[i][3]),Math.round(sums[i][1]/sums[i][3]),Math.round(sums[i][2]/sums[i][3])]; } const uniq=[], seen=new Set(); for(const c of centers){ const key=c.join(','); if(!seen.has(key)){ seen.add(key); uniq.push(c); } } return uniq; }
+function stageQuantize(input,k){ const img=getImageData(input), d=img.data, pal=extractPaletteKMeans(img,k); for(let i=0;i<d.length;i+=4){ if(d[i+3]<20) continue; const c=pal[nearestCenter(d[i],d[i+1],d[i+2],pal)]; d[i]=c[0]; d[i+1]=c[1]; d[i+2]=c[2]; d[i+3]=d[i+3]>150?255:(d[i+3]>70?220:0); } const c=canvasFromImageData(img); c.__palette=pal; return c; }
+function majorityOpaqueAround(src,w,h,x,y){ const count=new Map(); for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const xx=x+dx,yy=y+dy; if(xx<0||xx>=w||yy<0||yy>=h) continue; const i=(yy*w+xx)*4; if(src[i+3]<32) continue; const key=src[i]+','+src[i+1]+','+src[i+2]+','+src[i+3]; count.set(key,(count.get(key)||0)+1); } let best=null,bestN=0; for(const [k,v] of count){ if(v>bestN){ best=k; bestN=v; } } return best&&bestN>=4 ? best.split(',').map(Number) : null; }
+function stageOutline(input){ const img=getImageData(input), d=img.data, w=img.width,h=img.height; let darkest=[40,34,40]; for(let i=0;i<d.length;i+=4){ if(d[i+3]<200) continue; const lum=lumOf(d[i],d[i+1],d[i+2]), cur=lumOf(darkest[0],darkest[1],darkest[2]); if(lum<cur) darkest=[d[i],d[i+1],d[i+2]]; } const out=new ImageData(new Uint8ClampedArray(d),w,h), src=out.data; for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=(y*w+x)*4; if(d[i+3]>0) continue; let near=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(d[ni+3]>180) near++; } if(near>=2){ src[i]=Math.round(darkest[0]*0.8); src[i+1]=Math.round(darkest[1]*0.8); src[i+2]=Math.round(darkest[2]*0.8); src[i+3]=255; } } return canvasFromImageData(out); }
+
+function runPipelineOnSource(source128){
+  drawImageOnChecker($('cSource128'), source128, false, true);
+  let cleanup = cloneCanvas(source128);
+  if(state.cleanup) cleanup = stageCleanup(cleanup);
+  drawImageOnChecker($('cCleanup'), cleanup, false, true);
+  let boost = cloneCanvas(cleanup);
+  if(state.boost) boost = stageBoost(boost, Number($('boostLevel').value||1.18));
+  drawImageOnChecker($('cBoost'), boost, false, true);
+  let quant = cloneCanvas(boost);
+  if(state.quant) quant = stageQuantize(quant, Number($('k').value||12));
+  drawImageOnChecker($('cQuant'), quant, false, true);
+  let final = cloneCanvas(quant);
+  if(state.outline) final = stageOutline(final);
+  drawImageOnChecker($('cFinal'), final, false, true);
+  drawImageOnChecker($('cPreview'), final, true, true);
+  $('modeInfo').textContent = [state.cleanup?'cleanup':'nocleanup', state.boost?'boost':'noboost', state.quant?'quant':'noquant', state.outline?'outline':'nooutline'].join(' / ');
+  state.last.final=final; state.last.cleanup=cleanup; state.last.boost=boost; state.last.quant=quant;
 }
 
-function buildBackgroundMask(src,bg){
-  const {ctx,w,h}=src; const img=ctx.getImageData(0,0,w,h); const data=img.data;
-  const bgMask=new Uint8Array(w*h); const qx=[]; const qy=[];
-  const baseTh=clamp(18 + bg.noise*1.10, 18, 46);
-  function isBgCandidate(x,y){
-    const i=(y*w+x)*4; const a=data[i+3]; if(a<8) return true;
-    const r=data[i],g=data[i+1],b=data[i+2]; const d=distRGB3(r,g,b,bg.color); const s=satOf(r,g,b); const l=lumOf(r,g,b);
-    if(d<=baseTh) return true;
-    if(d<=baseTh*1.22 && s<18 && Math.abs(l-bg.lum)<18) return true;
-    if((x<w*0.07||x>w*0.93||y<h*0.07||y>h*0.96) && d<=baseTh*1.55 && s<22 && Math.abs(l-bg.lum)<24) return true;
-    return false;
-  }
-  function push(x,y){ const idx=y*w+x; if(bgMask[idx]) return; if(!isBgCandidate(x,y)) return; bgMask[idx]=1; qx.push(x); qy.push(y); }
-  for(let x=0;x<w;x++){ push(x,0); push(x,h-1); }
-  for(let y=0;y<h;y++){ push(0,y); push(w-1,y); }
-  let head=0; while(head<qx.length){ const x=qx[head],y=qy[head++]; if(x>0)push(x-1,y); if(x<w-1)push(x+1,y); if(y>0)push(x,y-1); if(y<h-1)push(x,y+1); }
-  return {bgMask, baseTh, img};
-}
-
-function recoverForeground(mask, src, bg, baseTh){
-  const {ctx,w,h}=src; const data=ctx.getImageData(0,0,w,h).data; const out=mask.slice();
-  for(let pass=0; pass<3; pass++){
-    const prev=out.slice();
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-      const idx=y*w+x; if(prev[idx]) continue;
-      let fgN=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; if(prev[(y+dy)*w+(x+dx)]) fgN++; }
-      if(fgN<5) continue;
-      const i=idx*4; const r=data[i],g=data[i+1],b=data[i+2]; const d=distRGB3(r,g,b,bg.color); const s=satOf(r,g,b); const l=lumOf(r,g,b);
-      if(d>baseTh*0.72 || s>bg.sat+4 || Math.abs(l-bg.lum)>10) out[idx]=1;
-    }
-  }
-  return out;
-}
-
-function fillInteriorHoles(mask,w,h,bbox){
-  const minx=Math.max(0,bbox.x-2), miny=Math.max(0,bbox.y-2), maxx=Math.min(w-1,bbox.x+bbox.w+1), maxy=Math.min(h-1,bbox.y+bbox.h+1);
-  const ww=maxx-minx+1, hh=maxy-miny+1; const seen=new Uint8Array(ww*hh); const q=[];
-  function at(x,y){ return mask[(miny+y)*w + (minx+x)]?1:0; }
-  function push(x,y){ const idx=y*ww+x; if(seen[idx]) return; if(at(x,y)) return; seen[idx]=1; q.push(idx); }
-  for(let x=0;x<ww;x++){ push(x,0); push(x,hh-1); }
-  for(let y=0;y<hh;y++){ push(0,y); push(ww-1,y); }
-  for(let head=0; head<q.length; head++){
-    const cur=q[head], x=cur%ww, y=(cur/ww)|0;
-    if(x>0) push(x-1,y); if(x<ww-1) push(x+1,y); if(y>0) push(x,y-1); if(y<hh-1) push(x,y+1);
-  }
-  const out=mask.slice(); let filled=0;
-  for(let y=0;y<hh;y++) for(let x=0;x<ww;x++){
-    const idx=y*ww+x; if(seen[idx]) continue; const gi=(miny+y)*w + (minx+x); if(!out[gi]){ out[gi]=1; filled++; }
-  }
-  return {mask:out, filled};
-}
-
-function recoverThinStructures(mask, src, bg, baseTh){
-  const {ctx,w,h}=src; const data=ctx.getImageData(0,0,w,h).data; const prev=mask.slice(); const out=mask.slice(); let added=0;
-  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
-    const idx=y*w+x; if(prev[idx]) continue;
-    let fgN=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; if(prev[(y+dy)*w+(x+dx)]) fgN++; }
-    if(fgN<3) continue;
-    const i=idx*4; const r=data[i],g=data[i+1],b=data[i+2]; const d=distRGB3(r,g,b,bg.color); const s=satOf(r,g,b); const l=lumOf(r,g,b);
-    if(d>baseTh*0.58 || s>bg.sat+3 || Math.abs(l-bg.lum)>8){ out[idx]=1; added++; }
-  }
-  return {mask:out, added};
-}
-
-function removeBottomSupport(mask, src, bg){
-  const {ctx,w,h}=src; const data=ctx.getImageData(0,0,w,h).data; const candidate=new Uint8Array(w*h);
-  for(let y=Math.floor(h*0.68); y<h; y++) for(let x=0;x<w;x++){
-    const idx=y*w+x; if(!mask[idx]) continue; const i=idx*4; const r=data[i],g=data[i+1],b=data[i+2]; const s=satOf(r,g,b); const l=lumOf(r,g,b); const d=distRGB3(r,g,b,bg.color);
-    if(s<26 && l>bg.lum-18 && d<80) candidate[idx]=1;
-  }
-  const labels=new Int32Array(w*h); const comps=[]; let label=0; const q=[];
-  for(let p=0;p<w*h;p++){
-    if(!candidate[p]||labels[p]) continue; label++; let area=0,minx=w,miny=h,maxx=-1,maxy=-1, sumS=0, sumL=0, touchBottom=0;
-    labels[p]=label; q.length=0; q.push(p);
-    for(let head=0; head<q.length; head++){
-      const cur=q[head], x=cur%w, y=(cur/w)|0; area++; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; if(y>=h-2) touchBottom=1;
-      const i=cur*4; sumS += satOf(data[i],data[i+1],data[i+2]); sumL += lumOf(data[i],data[i+1],data[i+2]);
-      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
-        if(!dx&&!dy) continue; const xx=x+dx, yy=y+dy; if(xx<0||xx>=w||yy<0||yy>=h) continue; const ni=yy*w+xx; if(candidate[ni]&&!labels[ni]){ labels[ni]=label; q.push(ni); }
-      }
-    }
-    comps[label]={area,minx,maxx,miny,maxy,w:maxx-minx+1,h:maxy-miny+1, avgS:sumS/Math.max(1,area), avgL:sumL/Math.max(1,area), touchBottom};
-  }
-  const out=mask.slice(); let removed=0;
-  for(let l=1;l<comps.length;l++){
-    const c=comps[l]; if(!c) continue;
-    const wide=c.w>w*0.28, flat=c.h<h*0.18, low=c.miny>h*0.72, pale=c.avgS<22, bright=c.avgL>bg.lum-15;
-    if((wide&&flat&&low&&pale&&bright) || (c.touchBottom&&wide&&flat&&pale)){
-      for(let p=0;p<labels.length;p++) if(labels[p]===l){ out[p]=0; removed++; }
-    }
-  }
-  return {mask:out, removed};
-}
-
-function keepMainCharacterComponents(mask,w,h){
-  const labels=new Int32Array(w*h); let label=0; const comps=[]; const q=[];
-  for(let p=0;p<w*h;p++){
-    if(!mask[p]||labels[p]) continue;
-    label++; let area=0,minx=w,miny=h,maxx=-1,maxy=-1;
-    labels[p]=label; q.length=0; q.push(p);
-    for(let head=0; head<q.length; head++){
-      const cur=q[head], x=cur%w, y=(cur/w)|0; area++; if(x<minx)minx=x; if(y<miny)miny=y; if(x>maxx)maxx=x; if(y>maxy)maxy=y;
-      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
-        if(!dx&&!dy) continue; const xx=x+dx, yy=y+dy; if(xx<0||xx>=w||yy<0||yy>=h) continue; const ni=yy*w+xx; if(mask[ni]&&!labels[ni]){ labels[ni]=label; q.push(ni); }
-      }
-    }
-    comps[label]={area,minx,miny,maxx,maxy,w:maxx-minx+1,h:maxy-miny+1};
-  }
-  let main=0, mainArea=0;
-  for(let l=1;l<comps.length;l++) if(comps[l]&&comps[l].area>mainArea){ main=l; mainArea=comps[l].area; }
-  if(!main) return {mask,components:0,mainArea:0,kept:0};
-  const mb=comps[main]; const out=new Uint8Array(w*h); let kept=0;
-  for(let p=0;p<labels.length;p++){
-    const l=labels[p]; if(!l) continue; const c=comps[l];
-    const near=!(c.maxx<mb.minx-24||c.minx>mb.maxx+24||c.maxy<mb.miny-30||c.miny>mb.maxy+30);
-    const slender=(c.area>=8 && (c.w<=8 || c.h<=8));
-    if(l===main || (near && c.area>=12) || (near && slender)){ out[p]=1; kept++; }
-  }
-  return {mask:out,components:label,mainArea,kept};
-}
-
-function getBBox(mask,w,h){
-  let minx=w,miny=h,maxx=-1,maxy=-1,count=0; const rows=new Int32Array(h), cols=new Int32Array(w);
-  for(let y=0;y<h;y++) for(let x=0;x<w;x++){ if(!mask[y*w+x]) continue; rows[y]++; cols[x]++; count++; }
-  if(!count) return {x:0,y:0,w,h,count:0};
-  const rowMin=Math.max(1, Math.floor(w*0.004)); const colMin=Math.max(1, Math.floor(h*0.003));
-  for(let y=0;y<h;y++) if(rows[y]>=rowMin){ miny=y; break; }
-  for(let y=h-1;y>=0;y--) if(rows[y]>=rowMin){ maxy=y; break; }
-  for(let x=0;x<w;x++) if(cols[x]>=colMin){ minx=x; break; }
-  for(let x=w-1;x>=0;x--) if(cols[x]>=colMin){ maxx=x; break; }
-  if(maxx<minx || maxy<miny) return {x:0,y:0,w,h,count};
-  let bw=maxx-minx+1, bh=maxy-miny+1; const padX=Math.max(2,Math.round(bw*0.03)), padY=Math.max(2,Math.round(bh*0.02));
-  minx=clamp(minx-padX,0,w-1); maxx=clamp(maxx+padX,0,w-1); miny=clamp(miny-padY,0,h-1); maxy=clamp(maxy+padY,0,h-1);
-  return {x:minx,y:miny,w:maxx-minx+1,h:maxy-miny+1,count};
-}
-
-function makeCutoutCanvas(src,mask){
-  const {ctx,w,h}=src; const srcImg=ctx.getImageData(0,0,w,h); const out=new ImageData(w,h);
-  for(let p=0;p<w*h;p++){ const i=p*4; if(mask[p]){ out.data[i]=srcImg.data[i]; out.data[i+1]=srcImg.data[i+1]; out.data[i+2]=srcImg.data[i+2]; out.data[i+3]=255; } else { out.data[i]=0; out.data[i+1]=0; out.data[i+2]=0; out.data[i+3]=0; } }
-  const c=makeCanvas(w,h); c.getContext('2d').putImageData(out,0,0); return c;
-}
-
-function buildSource128(cutout,bbox){
-  const c=makeCanvas(128,128); const ctx=c.getContext('2d'); ctx.clearRect(0,0,128,128); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
-  const fit=Math.min(118/bbox.w,124/bbox.h); const dw=Math.max(1,Math.round(bbox.w*fit)); const dh=Math.max(1,Math.round(bbox.h*fit)); const dx=Math.round((128-dw)/2); let dy=128-dh-2; if(dy<2) dy=2;
-  ctx.drawImage(cutout,bbox.x,bbox.y,bbox.w,bbox.h,dx,dy,dw,dh);
-  return {canvas:c,fit,dw,dh,dx,dy};
-}
-
-function makeMaskDebug(mask,w,h,bbox){
-  const c=makeCanvas(w,h); const ctx=c.getContext('2d'); const img=ctx.createImageData(w,h);
-  for(let p=0;p<w*h;p++){ const i=p*4; if(mask[p]){ img.data[i]=34; img.data[i+1]=197; img.data[i+2]=94; img.data[i+3]=255; } else { img.data[i]=15; img.data[i+1]=23; img.data[i+2]=42; img.data[i+3]=255; } }
-  ctx.putImageData(img,0,0); ctx.strokeStyle='#f97316'; ctx.lineWidth=Math.max(1,Math.round(Math.min(w,h)/160)); ctx.strokeRect(bbox.x,bbox.y,bbox.w,bbox.h); return c;
-}
-
-function nearestCenter(r,g,b,centers){ let bi=0,bd=1e9; for(let i=0;i<centers.length;i++){ const c=centers[i]; const dr=r-c[0],dg=g-c[1],db=b-c[2]; const d=dr*dr+dg*dg+db*db; if(d<bd){ bd=d; bi=i; } } return bi; }
-function extractPaletteKMeans(imgData,k){ const d=imgData.data; const pts=[]; for(let i=0;i<d.length;i+=4){ if(d[i+3]<32) continue; pts.push([d[i],d[i+1],d[i+2]]); } if(!pts.length) return [[0,0,0]]; if(pts.length<=k) return pts; const step=Math.max(1,Math.floor(pts.length/k)); let centers=[]; for(let i=0;i<k;i++) centers.push(pts[Math.min(pts.length-1,i*step)].slice()); for(let iter=0;iter<7;iter++){ const sums=Array.from({length:k},()=>[0,0,0,0]); for(let p=0;p<pts.length;p++){ const q=pts[p], idx=nearestCenter(q[0],q[1],q[2],centers), s=sums[idx]; s[0]+=q[0]; s[1]+=q[1]; s[2]+=q[2]; s[3]++; } for(let i=0;i<k;i++) if(sums[i][3]) centers[i]=[Math.round(sums[i][0]/sums[i][3]),Math.round(sums[i][1]/sums[i][3]),Math.round(sums[i][2]/sums[i][3])]; } const uniq=[], seen=new Set(); for(const c of centers){ const key=c.join(','); if(!seen.has(key)){ seen.add(key); uniq.push(c); } } return uniq; }
-function colorIndexKey(d,i){ return d[i]+','+d[i+1]+','+d[i+2]+','+d[i+3]; }
-function majorityColorAround(src,w,h,x,y){ const count=new Map(); for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const xx=x+dx, yy=y+dy; if(xx<0||xx>=w||yy<0||yy>=h) continue; const i=(yy*w+xx)*4; if(src[i+3]<32) continue; const key=colorIndexKey(src,i); count.set(key,(count.get(key)||0)+1); } let best=null,bestN=0; for(const [k,v] of count){ if(v>bestN){ best=k; bestN=v; } } return best&&bestN>=4 ? best.split(',').map(Number) : null; }
-function buildPixel128(source128,k){ const w=source128.width, h=source128.height; const ctx=source128.getContext('2d',{willReadFrequently:true}); const img=ctx.getImageData(0,0,w,h); const src=img.data; const pal=extractPaletteKMeans(img,k); const out=new ImageData(w,h); const darkest=pal.slice().sort((a,b)=>lumOf(a[0],a[1],a[2])-lumOf(b[0],b[1],b[2]))[0]||[32,24,28]; for(let p=0;p<w*h;p++){ const i=p*4; const a=src[i+3]; if(a<28) continue; const idx=nearestCenter(src[i],src[i+1],src[i+2],pal); const c=pal[idx]; out.data[i]=c[0]; out.data[i+1]=c[1]; out.data[i+2]=c[2]; out.data[i+3]=a>150?255:(a>70?220:0); } const pass1=out.data.slice(); for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=(y*w+x)*4; if(pass1[i+3]<200) continue; let same=0; const my=colorIndexKey(pass1,i); for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(pass1[ni+3]<200) continue; if(colorIndexKey(pass1,ni)===my) same++; } if(same<=1){ const rep=majorityColorAround(pass1,w,h,x,y); if(rep){ out.data[i]=rep[0]; out.data[i+1]=rep[1]; out.data[i+2]=rep[2]; out.data[i+3]=255; } } } const fillSrc=out.data.slice(); for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=(y*w+x)*4; if(fillSrc[i+3]>0) continue; let near=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(fillSrc[ni+3]>180) near++; } if(near>=5){ const rep=majorityColorAround(fillSrc,w,h,x,y); if(rep){ out.data[i]=rep[0]; out.data[i+1]=rep[1]; out.data[i+2]=rep[2]; out.data[i+3]=220; } } } const edgeSrc=out.data.slice(); for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=(y*w+x)*4; if(edgeSrc[i+3]>0) continue; let near=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const ni=((y+dy)*w+(x+dx))*4; if(edgeSrc[ni+3]>180) near++; } if(near>=2){ out.data[i]=Math.round(darkest[0]*0.8); out.data[i+1]=Math.round(darkest[1]*0.8); out.data[i+2]=Math.round(darkest[2]*0.8); out.data[i+3]=255; } } const c=makeCanvas(w,h); c.getContext('2d').putImageData(out,0,0); return {canvas:c,palette:pal}; }
-
-function saveSummary(){ const orig=$('cOriginal'), cut=$('cCutout'), src=$('cSource128'), px=$('cPixel128'), prev=$('cPixel128Preview'), mask=$('cMask'); const c=makeCanvas(1080,560); const ctx=c.getContext('2d'); ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,c.width,c.height); ctx.fillStyle='#e2e8f0'; ctx.font='bold 18px sans-serif'; ctx.fillText('Sprite Studio v1.14.6 background fix',20,28); ctx.fillStyle='#94a3b8'; ctx.font='12px sans-serif'; ctx.fillText('stricter fg preservation / interior hole fill / thin-structure recovery / no 64 or 32 yet',20,48); const cards=[['Original',orig],['Cutout',cut],['Source128',src],['Pixel128',px],['Preview',prev],['Mask',mask]]; let x=20; for(const [label,cv] of cards){ ctx.fillStyle='#111827'; ctx.fillRect(x,70,150,150); ctx.strokeStyle='#334155'; ctx.strokeRect(x,70,150,150); if(cv&&cv.width){ const fit=Math.min(134/cv.width,134/cv.height); const dw=Math.round(cv.width*fit), dh=Math.round(cv.height*fit); ctx.drawImage(cv,0,0,cv.width,cv.height,x+Math.round((150-dw)/2),70+Math.round((150-dh)/2),dw,dh); } ctx.fillStyle='#cbd5e1'; ctx.fillText(label,x,238); x+=176; } ctx.fillStyle='#cbd5e1'; ctx.font='12px ui-monospace,monospace'; const lines=($('log').textContent||'').split('\n').slice(0,16); for(let i=0;i<lines.length;i++) ctx.fillText(lines[i],20,286+i*16); saveCanvas(c,'sprite_summary_v1146_bgfix.png'); }
-
-async function render(){
-  const input=$('file'); const file=input&&input.files&&input.files[0]; if(!file){ log('画像を選択してください。'); return; }
-  try{
-    log('128作成中...');
-    const img=await loadImage(file); const src=canvasFromImage(img); $('size').textContent=src.w+'x'+src.h; ensureCanvasSize($('cOriginal'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w)); drawFitCanvas($('cOriginal'),src.canvas,false);
-    const bg=sampleBackground(src.ctx,src.w,src.h); const bgRes=buildBackgroundMask(src,bg); let fg=new Uint8Array(src.w*src.h); for(let i=0;i<fg.length;i++) fg[i]=bgRes.bgMask[i]?0:1;
-    fg=recoverForeground(fg,src,bg,bgRes.baseTh); let bbox0=getBBox(fg,src.w,src.h); const holes=fillInteriorHoles(fg,src.w,src.h,bbox0); fg=holes.mask; const thin=recoverThinStructures(fg,src,bg,bgRes.baseTh); fg=thin.mask; const floor=removeBottomSupport(fg,src,bg); fg=floor.mask; const kept=keepMainCharacterComponents(fg,src.w,src.h); const bbox=getBBox(kept.mask,src.w,src.h);
-    const cutout=makeCutoutCanvas(src,kept.mask); ensureCanvasSize($('cCutout'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w)); drawImageOnChecker($('cCutout'),cutout,true,false);
-    const source128=buildSource128(cutout,bbox); drawImageOnChecker($('cSource128'),source128.canvas,false,true); const pixel128=buildPixel128(source128.canvas,Number($('k').value||12)); drawImageOnChecker($('cPixel128'),pixel128.canvas,false,true); drawImageOnChecker($('cPixel128Preview'),pixel128.canvas,true,true);
-    ensureCanvasSize($('cMask'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w)); const mdbg=makeMaskDebug(kept.mask,src.w,src.h,bbox); drawFitCanvas($('cMask'),mdbg,true);
-    window.__SPRITE1146__={version:VERSION, cutout, source128:source128.canvas, pixel128:pixel128.canvas, bbox, bg, palette:pixel128.palette};
-    $('bgInfo').textContent='bg '+bg.color.map(v=>v|0).join(',');
-    log([
+async function render(){ const file=$('file').files&&$('file').files[0]; if(!file){ log('画像を選択してください。'); return; } try{ log('処理中...'); const img=await loadImage(file); const src=canvasFromImage(img); $('size').textContent=src.w+'x'+src.h; ensureCanvasSize($('cOriginal'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w)); drawFitCanvas($('cOriginal'),src.canvas,false);
+    const bg=sampleBackground(src.ctx,src.w,src.h); const bgRes=buildBackgroundMask(src,bg); let fg=new Uint8Array(src.w*src.h); for(let i=0;i<fg.length;i++) fg[i]=bgRes.bgMask[i]?0:1; fg=recoverForeground(fg,src,bg,bgRes.baseTh); let bbox0=getBBox(fg,src.w,src.h); fg=fillInteriorHoles(fg,src.w,src.h,bbox0); fg=removeBottomSupport(fg,src,bg); const kept=keepMainCharacterComponents(fg,src.w,src.h); const bbox=getBBox(kept.mask,src.w,src.h); const cutout=makeCutoutCanvas(src,kept.mask); ensureCanvasSize($('cCutout'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w)); drawImageOnChecker($('cCutout'),cutout,true,false); const s128=buildSource128(cutout,bbox).canvas; state.last={bg,cutout,source128:s128,bbox,final:null,cleanup:null,boost:null,quant:null}; $('bgInfo').textContent='bg '+bg.color.map(v=>v|0).join(','); runPipelineOnSource(s128); log([
       'Sprite Output: '+VERSION,
-      'mode: background削りすぎ修正 + Source128 + Pixel128',
-      'background: outer connected flood + conservative bg threshold',
-      'added: interior-hole fill / thin-structure recovery / limited bottom-support removal',
+      'base: 素材保護重視の背景除去 -> Source128',
+      'toggleable post128 stages: cleanup / boost / quant / outline',
       'source size: '+src.w+'x'+src.h,
       'bg rgb: '+bg.color.map(v=>v|0).join(', ')+' / noise60='+bg.noise.toFixed(1)+' / threshold='+bgRes.baseTh.toFixed(1),
       'bbox: x='+bbox.x+', y='+bbox.y+', w='+bbox.w+', h='+bbox.h+', maskArea='+bbox.count,
-      'source128 draw: '+source128.dw+'x'+source128.dh+' @ '+source128.dx+','+source128.dy,
-      'hole fill: '+holes.filled+' px / thin recover: '+thin.added+' px / floor removed: '+floor.removed+' px',
-      'pixel128 palette: '+pixel128.palette.length+' colors',
-      'components: '+kept.components+' / mainArea='+kept.mainArea,
-      'next: Background Removed の削れ方を確認。OKなら Pixel128 の顔可読性を詰める'
+      'current toggles: cleanup='+state.cleanup+', boost='+state.boost+', quant='+state.quant+', outline='+state.outline,
+      'quant colors: '+Number($('k').value||12),
+      'boost level: '+Number($('boostLevel').value||1.18),
+      '判断の見方:',
+      '- 減色ONで細部が消えるなら減色は弱める/後回し',
+      '- 濃色化ONで顔や衣装が読みやすいなら採用候補',
+      '- cleanup ONで外周ノイズだけ消えるなら採用候補',
+      '- outline ONで太りすぎるなら輪郭は弱める'
     ]);
-  }catch(err){ console.error(err); log(['v1.14.6 error', String(err&&err.message||err)]); }
-}
+  }catch(err){ console.error(err); log(['v1.14.7 error', String(err&&err.message||err)]); } }
 
-function boot(){ const run=$('run'); if(run) run.addEventListener('click',render); const input=$('file'); if(input) input.addEventListener('change',()=>setTimeout(render,80)); const k=$('k'); if(k) k.addEventListener('change',()=>{ if(window.__SPRITE1146__&&$('file').files&&$('file').files[0]) render(); }); const s1=$('saveSource128'); if(s1) s1.addEventListener('click',()=>saveCanvas(window.__SPRITE1146__&&window.__SPRITE1146__.source128,'source128_v1146.png')); const s2=$('savePixel128'); if(s2) s2.addEventListener('click',()=>saveCanvas(window.__SPRITE1146__&&window.__SPRITE1146__.pixel128,'pixel128_v1146.png')); const sm=$('summary'); if(sm) sm.addEventListener('click',saveSummary); log('v1.14.6 ready。画像を選択すると自動で背景除去→Source128→Pixel128 を作成します。'); }
-if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+function rerunIfPossible(){ if(state.last&&state.last.source128){ runPipelineOnSource(state.last.source128); const old=($('log').textContent||'').split('\n'); if(old.length){ const head=old.filter(Boolean).slice(0,8); head.push('current toggles: cleanup='+state.cleanup+', boost='+state.boost+', quant='+state.quant+', outline='+state.outline); log(head); } } }
+function saveSummary(){ const cards=[['Original',$('cOriginal')],['Cutout',$('cCutout')],['Source128',$('cSource128')],['Cleanup',$('cCleanup')],['Boost',$('cBoost')],['Quant',$('cQuant')],['Final',$('cFinal')],['Preview',$('cPreview')]]; const c=makeCanvas(1400,760); const ctx=c.getContext('2d'); ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,c.width,c.height); ctx.fillStyle='#e2e8f0'; ctx.font='bold 18px sans-serif'; ctx.fillText('Sprite Studio v1.14.7 post128 controls',20,28); ctx.fillStyle='#94a3b8'; ctx.font='12px sans-serif'; ctx.fillText('cleanup / color boost / quantize / outline toggles for 128 testing',20,48); let x=20,y=70,col=0; for(const [label,cv] of cards){ ctx.fillStyle='#111827'; ctx.fillRect(x,y,150,150); ctx.strokeStyle='#334155'; ctx.strokeRect(x,y,150,150); if(cv&&cv.width){ const fit=Math.min(134/cv.width,134/cv.height); const dw=Math.round(cv.width*fit),dh=Math.round(cv.height*fit); ctx.drawImage(cv,0,0,cv.width,cv.height,x+Math.round((150-dw)/2),y+Math.round((150-dh)/2),dw,dh);} ctx.fillStyle='#cbd5e1'; ctx.fillText(label,x,y+168); col++; x+=170; if(col===4){ col=0; x=20; y+=210; } }
+  ctx.fillStyle='#cbd5e1'; ctx.font='12px ui-monospace,monospace'; const lines=($('log').textContent||'').split('\n').slice(0,16); for(let i=0;i<lines.length;i++) ctx.fillText(lines[i],720,90+i*16); saveCanvas(c,'sprite_summary_v1147_post128_controls.png'); }
+
+function init(){ updateToggleButtons(); $('run').addEventListener('click',render); $('file').addEventListener('change',()=>setTimeout(render,80)); $('btnCleanup').addEventListener('click',()=>{state.cleanup=!state.cleanup; updateToggleButtons(); rerunIfPossible();}); $('btnBoost').addEventListener('click',()=>{state.boost=!state.boost; updateToggleButtons(); rerunIfPossible();}); $('btnQuant').addEventListener('click',()=>{state.quant=!state.quant; updateToggleButtons(); rerunIfPossible();}); $('btnOutline').addEventListener('click',()=>{state.outline=!state.outline; updateToggleButtons(); rerunIfPossible();}); $('k').addEventListener('change',rerunIfPossible); $('boostLevel').addEventListener('change',rerunIfPossible); $('presetRaw').addEventListener('click',()=>{ state.cleanup=false; state.boost=false; state.quant=false; state.outline=false; updateToggleButtons(); rerunIfPossible(); }); $('presetAll').addEventListener('click',()=>{ state.cleanup=true; state.boost=true; state.quant=true; state.outline=true; updateToggleButtons(); rerunIfPossible(); }); $('saveSource128').addEventListener('click',()=>saveCanvas(state.last&&state.last.source128,'source128_v1147.png')); $('saveCurrent').addEventListener('click',()=>saveCanvas(state.last&&state.last.final,'final128_v1147.png')); $('summary').addEventListener('click',saveSummary); log('v1.14.7 ready。画像を選択後、各ボタンをON/OFFして Final128 を比較してください。'); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 </script>
 </body>
