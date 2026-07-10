@@ -3,38 +3,150 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Sprite Studio v1.15.2 OpenCV Optional Guard</title>
+<title>Sprite Studio v1.15.3 OpenCV Fixed Loader</title>
 <style>
 :root{--bg:#0f172a;--panel:#1e293b;--panel2:#111827;--line:#334155;--text:#e2e8f0;--muted:#94a3b8;--active:#0f766e;--activeLine:#14b8a6;--warn:#f59e0b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:14px 14px 40px}h1{font-size:20px;margin:0 0 4px}.sub{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px}.bar,.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px;margin:10px 0}button,input,select{font:inherit}button{border:1px solid var(--line);border-radius:12px;background:#22304a;color:var(--text);padding:9px 12px;font-weight:700}button.primary{background:#1d4ed8;border-color:#60a5fa}button.toggle.active{background:var(--active);border-color:var(--activeLine)}button.save{background:#334155;border-color:#64748b}button:disabled{opacity:.45}input[type=file]{max-width:100%;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}.card h2{font-size:16px;margin:0;padding:10px 12px;background:#22304a;display:flex;justify-content:space-between;gap:8px;align-items:center}.card .body{padding:10px}.card canvas{display:block;max-width:100%;background:#0b1020;border:1px solid var(--line);border-radius:8px}.wide{grid-column:1/-1}.pill{font-size:12px;color:#cbd5e1;background:#0f172a;border:1px solid var(--line);border-radius:999px;padding:3px 8px;white-space:nowrap}.pill.warn{color:#fde68a;border-color:#92400e}.log{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;color:#cbd5e1;background:#0b1020;border:1px solid var(--line);border-radius:12px;padding:10px;max-height:300px;overflow:auto}.preview{width:256px;height:256px;image-rendering:pixelated}.actual128{width:128px;height:128px;image-rendering:pixelated}.checker{background-color:#111827;background-image:linear-gradient(45deg,#1e293b 25%,transparent 25%),linear-gradient(-45deg,#1e293b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1e293b 75%),linear-gradient(-45deg,transparent 75%,#1e293b 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}.notice{border:1px solid #164e63;background:#082f49;border-radius:14px;padding:10px;margin:10px 0;color:#dbeafe;font-size:13px;line-height:1.55}.mini{font-size:12px;color:var(--muted)}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.spacer{flex:1}.footer{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}@media(max-width:640px){body{padding:10px}.grid{grid-template-columns:1fr}.preview{width:100%;height:auto}.bar button,.controls button{flex:1 1 auto}}
 </style>
 <script>
-window.__cvReady=false;
-window.__cvFailed=false;
-function markCvReady(){
-  if(window.__cvReady) return;
-  window.__cvReady=true;
-  window.__cvFailed=false;
-  window.dispatchEvent(new Event('cv-ready'));
-}
-function markCvFail(){
-  if(window.__cvReady) return;
-  window.__cvFailed=true;
-  window.dispatchEvent(new Event('cv-failed'));
-}
-var Module={onRuntimeInitialized:markCvReady};
-setTimeout(function(){
-  if(!window.__cvReady){ markCvFail(); }
-},6000);
+(function(){
+  'use strict';
+  window.__cvReady=false;
+  window.__cvLoading=false;
+  window.__cvLoadAttempt=0;
+  window.__cvSource='';
+  window.__cvLines=[];
+  window.__cvSources=[
+    'js/opencv.js',
+    'https://docs.opencv.org/4.10.0/opencv.js'
+  ];
+  function emitCvStatus(msg){
+    const line='['+(new Date()).toLocaleTimeString()+'] '+msg;
+    window.__cvLines.push(line);
+    if(window.__cvLines.length>80) window.__cvLines.shift();
+    const log=document.getElementById('log');
+    if(log) log.textContent=window.__cvLines.join('\\n');
+    const pill=document.getElementById('bgInfo');
+    if(pill && !window.__cvReady) pill.textContent=msg.slice(0,32);
+    window.dispatchEvent(new CustomEvent('cv-status',{detail:{line,msg}}));
+  }
+  window.__emitCvStatus=emitCvStatus;
+  function markReady(source){
+    window.__cvReady=true;
+    window.__cvLoading=false;
+    window.__cvSource=source||window.__cvSource||'unknown';
+    emitCvStatus('OpenCV READY: '+window.__cvSource);
+    window.dispatchEvent(new Event('cv-ready'));
+  }
+  function markFail(msg){
+    window.__cvReady=false;
+    window.__cvLoading=false;
+    emitCvStatus('OpenCV FAILED: '+msg);
+    window.dispatchEvent(new Event('cv-failed'));
+  }
+  async function validateOpenCV(source){
+    emitCvStatus('validate start: '+source);
+    const started=Date.now();
+    while(Date.now()-started<45000){
+      try{
+        if(window.cv){
+          if(typeof window.cv.then==='function'){
+            emitCvStatus('cv is Promise-like; waiting...');
+            window.cv=await window.cv;
+          }
+          if(window.cv && window.cv.Mat && window.cv.grabCut){
+            const m=new window.cv.Mat(1,1,window.cv.CV_8UC1);
+            m.delete();
+            markReady(source);
+            return true;
+          }
+        }
+      }catch(e){
+        emitCvStatus('validate exception: '+(e&&e.message?e.message:String(e)));
+      }
+      await new Promise(r=>setTimeout(r,300));
+    }
+    emitCvStatus('validate timeout: cv.Mat / cv.grabCut not usable');
+    return false;
+  }
+  window.Module={
+    onRuntimeInitialized:function(){
+      emitCvStatus('Module.onRuntimeInitialized fired');
+      validateOpenCV(window.__cvSource||'Module.onRuntimeInitialized');
+    }
+  };
+  function removeOldOpenCvScripts(){
+    const scripts=[...document.querySelectorAll('script[data-opencv-loader="1"]')];
+    scripts.forEach(s=>s.remove());
+  }
+  function loadScript(src){
+    return new Promise((resolve,reject)=>{
+      emitCvStatus('script loading: '+src);
+      window.__cvSource=src;
+      const s=document.createElement('script');
+      s.src=src;
+      s.async=false;
+      s.defer=false;
+      s.setAttribute('data-opencv-loader','1');
+      let done=false;
+      const timer=setTimeout(()=>{
+        if(done) return; done=true;
+        emitCvStatus('script timeout: '+src);
+        reject(new Error('timeout'));
+      },45000);
+      s.onload=()=>{
+        if(done) return; done=true; clearTimeout(timer);
+        emitCvStatus('script loaded: '+src);
+        resolve(src);
+      };
+      s.onerror=()=>{
+        if(done) return; done=true; clearTimeout(timer);
+        emitCvStatus('script error: '+src);
+        reject(new Error('script error'));
+      };
+      document.head.appendChild(s);
+    });
+  }
+  window.loadOpenCVFixed=async function(force){
+    if(window.__cvReady && !force){ emitCvStatus('OpenCV already ready'); return true; }
+    if(window.__cvLoading && !force){ emitCvStatus('OpenCV already loading'); return false; }
+    window.__cvLoading=true;
+    window.__cvReady=false;
+    window.__cvLoadAttempt++;
+    const attempt=window.__cvLoadAttempt;
+    emitCvStatus('OpenCV load attempt '+attempt+' start');
+    if(force){
+      removeOldOpenCvScripts();
+      try{ delete window.cv; }catch(e){ window.cv=undefined; }
+    }
+    for(const src of window.__cvSources){
+      try{
+        await loadScript(src);
+        const ok=await validateOpenCV(src);
+        if(ok) return true;
+      }catch(e){
+        emitCvStatus('source failed: '+src+' / '+(e&&e.message?e.message:String(e)));
+      }
+    }
+    markFail('all sources failed. local js/opencv.js missing or remote 4.10.0 blocked/not initialized.');
+    return false;
+  };
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>window.loadOpenCVFixed(false));
+  }else{
+    window.loadOpenCVFixed(false);
+  }
+})();
 </script>
-<script async src="https://docs.opencv.org/4.x/opencv.js" onload="setTimeout(function(){ if(window.cv&&window.cv.Mat) markCvReady(); },300)" onerror="markCvFail()"></script>
 </head>
 <body>
-<h1>Sprite Studio v1.15.2 OpenCV Optional Guard</h1>
-<div class="sub"><b style="color:#22c55e">キャラ内部保護版</b> / 元画像段階ではキャラ内部を抜かないことを最優先。OpenCVが使える場合はGrabCut、読み込めない場合はJS安全処理で Background Removed を作ります。読み込み待ちで止まらない版です。</div>
+<h1>Sprite Studio v1.15.3 OpenCV Fixed Loader</h1>
+<div class="sub"><b style="color:#22c55e">キャラ内部保護版 + OpenCV読込安定化</b> / OpenCV.jsを固定版URLから順番に読み込み、cv.Mat / cv.grabCut の実行テストまで通った時だけ処理します。</div>
 <div class="bar">
   <input id="file" type="file" accept="image/*" />
-  <button id="run" class="primary">再実行</button>
+  <button id="run" class="primary" disabled>OpenCV診断中</button>
+  <button id="reloadCv" class="save">OpenCV再読込</button>
+  <button id="diagCv" class="save">OpenCV診断</button>
   <button id="saveCutout" class="save">背景除去PNG保存</button>
   <button id="saveSource128" class="save">Source128保存</button>
   <button id="saveCurrent" class="save">現在結果保存</button>
@@ -49,30 +161,27 @@ setTimeout(function(){
   <div class="row"><span class="mini">濃色化</span><select id="boostLevel"><option value="1.10">弱</option><option value="1.18" selected>中</option><option value="1.28">強</option></select></div>
   <div class="spacer"></div><button id="presetRaw">Source128のみ</button><button id="presetAll">全処理ON</button>
 </div>
-<div class="notice">今回の確認対象はまず <b>1. Background Removed</b> です。OpenCVの読み込みに失敗しても止まらず、JS安全処理で先へ進みます。顔・髪・袖・体の内部にチェッカー穴が出ないことを最優先にしています。</div>
+<div class="notice">今回の確認対象はまず <b>OpenCV.jsがREADYになるか</b> です。READY後に <b>1. Background Removed</b> を確認します。iPhoneで止まった場合は、Log / Debugのどの段階で止まったかを見ます。</div>
 <div class="grid">
   <div class="card"><h2>0. Original <span id="size" class="pill">no image</span></h2><div class="body"><canvas id="cOriginal"></canvas></div></div>
-  <div class="card"><h2>1. Background Removed <span id="bgInfo" class="pill warn">JS fallback ready</span></h2><div class="body"><canvas id="cCutout" class="checker"></canvas></div></div>
+  <div class="card"><h2>1. Background Removed <span id="bgInfo" class="pill warn">OpenCV診断中</span></h2><div class="body"><canvas id="cCutout" class="checker"></canvas></div></div>
   <div class="card"><h2>2. Source128 <span class="pill">基準</span></h2><div class="body"><canvas id="cSource128" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>3. Step Cleanup</h2><div class="body"><canvas id="cCleanup" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>4. Step Color Boost</h2><div class="body"><canvas id="cBoost" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>5. Step Quantize</h2><div class="body"><canvas id="cQuant" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>6. Final128 <span id="modeInfo" class="pill">current</span></h2><div class="body"><canvas id="cFinal" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>7. Final Preview</h2><div class="body"><canvas id="cPreview" class="checker preview" width="256" height="256"></canvas></div></div>
-  <div class="card wide"><h2>8. Log / Debug</h2><div class="body"><div id="log" class="log">画像を選択してください。OpenCV読込中でもJS安全処理で実行できます。</div></div></div>
+  <div class="card wide"><h2>8. Log / Debug</h2><div class="body"><div id="log" class="log">OpenCV.js読込診断を開始します...</div></div></div>
 </div>
-<div class="footer">v1.15.2: OpenCV.jsは任意。読み込み待ちで止まらず、失敗時はJS安全処理で続行します。</div>
+<div class="footer">v1.15.3: OpenCV.js固定読込版。4.x追従URLとasync読込を廃止し、読込段階をログ表示します。</div>
 <script>
 (function(){
 'use strict';
-const VERSION='v1.15.2-opencv-optional-guard';
+const VERSION='v1.15.3-opencv-fixed-loader';
 const $=id=>document.getElementById(id);
 const state={cleanup:true,boost:false,quant:true,outline:true,last:null};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lumOf=(r,g,b)=>0.299*r+0.587*g+0.114*b;
-const distRGB3=(r,g,b,c)=>{const dr=r-c[0],dg=g-c[1],db=b-c[2];return Math.sqrt(dr*dr+dg*dg+db*db);};
-const satOf=(r,g,b)=>Math.max(r,g,b)-Math.min(r,g,b);
-function median(arr){if(!arr.length)return 0;const a=arr.slice().sort((x,y)=>x-y);return a[(a.length/2)|0];}
 function makeCanvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
 function cloneCanvas(src){const c=makeCanvas(src.width,src.height);c.getContext('2d').drawImage(src,0,0);return c;}
 function ensureCanvasSize(c,w,h){if(c.width!==w)c.width=w;if(c.height!==h)c.height=h;}
@@ -120,141 +229,12 @@ function extractPaletteKMeans(img,k){const d=img.data,pts=[];for(let i=0;i<d.len
 function stageQuantize(input,k){const img=getImageData(input),d=img.data,pal=extractPaletteKMeans(img,k);for(let i=0;i<d.length;i+=4){if(d[i+3]<20)continue;const c=pal[nearestCenter(d[i],d[i+1],d[i+2],pal)];d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];d[i+3]=d[i+3]>150?255:(d[i+3]>70?220:0);}return canvasFromImageData(img);}
 function stageOutline(input){const img=getImageData(input),d=img.data,w=img.width,h=img.height;let darkest=[40,34,40];for(let i=0;i<d.length;i+=4)if(d[i+3]>200&&lumOf(d[i],d[i+1],d[i+2])<lumOf(darkest[0],darkest[1],darkest[2]))darkest=[d[i],d[i+1],d[i+2]];const out=new ImageData(new Uint8ClampedArray(d),w,h),src=out.data;for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=(y*w+x)*4;if(d[i+3]>0)continue;let near=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const ni=((y+dy)*w+(x+dx))*4;if(d[ni+3]>180)near++;}if(near>=2){src[i]=Math.round(darkest[0]*.8);src[i+1]=Math.round(darkest[1]*.8);src[i+2]=Math.round(darkest[2]*.8);src[i+3]=255;}}return canvasFromImageData(out);}
 function runPipelineOnSource(source128){drawImageOnChecker($('cSource128'),source128,false,true);let c=cloneCanvas(source128);if(state.cleanup)c=stageCleanup(c);drawImageOnChecker($('cCleanup'),c,false,true);let b=cloneCanvas(c);if(state.boost)b=stageBoost(b,Number($('boostLevel').value||1.18));drawImageOnChecker($('cBoost'),b,false,true);let q=cloneCanvas(b);if(state.quant)q=stageQuantize(q,Number($('k').value||12));drawImageOnChecker($('cQuant'),q,false,true);let f=cloneCanvas(q);if(state.outline)f=stageOutline(f);drawImageOnChecker($('cFinal'),f,false,true);drawImageOnChecker($('cPreview'),f,true,true);$('modeInfo').textContent=[state.cleanup?'cleanup':'nocleanup',state.boost?'boost':'noboost',state.quant?'quant':'noquant',state.outline?'outline':'nooutline'].join(' / ');state.last.final=f;}
-
-function sampleBackgroundJS(ctx,w,h){
-  const data=ctx.getImageData(0,0,w,h).data;
-  const rs=[],gs=[],bs=[],ls=[];
-  const step=Math.max(1,Math.floor(Math.min(w,h)/100));
-  function add(x,y){const i=(y*w+x)*4;if(data[i+3]<8)return;rs.push(data[i]);gs.push(data[i+1]);bs.push(data[i+2]);ls.push(lumOf(data[i],data[i+1],data[i+2]));}
-  for(let x=0;x<w;x+=step){add(x,0);add(x,h-1);if(h>2)add(x,1);}
-  for(let y=0;y<h;y+=step){add(0,y);add(w-1,y);if(w>2)add(1,y);}
-  const bg=[median(rs),median(gs),median(bs)];
-  const ds=[];for(let i=0;i<rs.length;i++)ds.push(distRGB3(rs[i],gs[i],bs[i],bg));ds.sort((a,b)=>a-b);
-  return {color:bg,noise:ds.length?ds[Math.floor(ds.length*0.60)]:0,lum:median(ls),sat:rs.length?Math.round(rs.reduce((s,_,i)=>s+satOf(rs[i],gs[i],bs[i]),0)/rs.length):0};
-}
-function buildBackgroundMaskJS(srcObj,bg){
-  const w=srcObj.w,h=srcObj.h;
-  const img=srcObj.ctx.getImageData(0,0,w,h);const d=img.data;
-  const bgMask=new Uint8Array(w*h),qx=[],qy=[];
-  const baseTh=clamp(18+bg.noise*1.08,18,44);
-  function isBg(x,y){
-    const i=(y*w+x)*4;if(d[i+3]<8)return true;
-    const r=d[i],g=d[i+1],b=d[i+2],dist=distRGB3(r,g,b,bg.color),sat=satOf(r,g,b),lum=lumOf(r,g,b);
-    if(dist<=baseTh)return true;
-    if(dist<=baseTh*1.18&&sat<18&&Math.abs(lum-bg.lum)<17)return true;
-    if((x<w*0.06||x>w*0.94||y<h*0.06||y>h*0.96)&&dist<=baseTh*1.45&&sat<22&&Math.abs(lum-bg.lum)<22)return true;
-    return false;
-  }
-  function push(x,y){const idx=y*w+x;if(bgMask[idx])return;if(!isBg(x,y))return;bgMask[idx]=1;qx.push(x);qy.push(y);}
-  for(let x=0;x<w;x++){push(x,0);push(x,h-1);}for(let y=0;y<h;y++){push(0,y);push(w-1,y);}
-  let head=0;while(head<qx.length){const x=qx[head],y=qy[head++];if(x>0)push(x-1,y);if(x<w-1)push(x+1,y);if(y>0)push(x,y-1);if(y<h-1)push(x,y+1);}
-  return {bgMask,baseTh};
-}
-function recoverForegroundJS(mask,srcObj,bg,baseTh){
-  const w=srcObj.w,h=srcObj.h,d=srcObj.ctx.getImageData(0,0,w,h).data;
-  const out=mask.slice();
-  for(let pass=0;pass<3;pass++){
-    const prev=out.slice();
-    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
-      const idx=y*w+x;if(prev[idx])continue;
-      let n=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;if(prev[(y+dy)*w+(x+dx)])n++;}
-      if(n<5)continue;
-      const i=idx*4,r=d[i],g=d[i+1],b=d[i+2],dist=distRGB3(r,g,b,bg.color),sat=satOf(r,g,b),lum=lumOf(r,g,b);
-      if(dist>baseTh*.70||sat>bg.sat+4||Math.abs(lum-bg.lum)>10)out[idx]=1;
-    }
-  }
-  return out;
-}
-function removeLargeFloorJS(mask,srcObj,bg){
-  const w=srcObj.w,h=srcObj.h,d=srcObj.ctx.getImageData(0,0,w,h).data;
-  const cand=new Uint8Array(w*h);
-  for(let y=Math.floor(h*.70);y<h;y++)for(let x=0;x<w;x++){
-    const idx=y*w+x;if(!mask[idx])continue;const i=idx*4,r=d[i],g=d[i+1],b=d[i+2],sat=satOf(r,g,b),lum=lumOf(r,g,b),dist=distRGB3(r,g,b,bg.color);
-    if(sat<24&&lum>bg.lum-18&&dist<76)cand[idx]=1;
-  }
-  const labels=new Int32Array(w*h),comps=[null],q=[];let label=0;
-  for(let p=0;p<w*h;p++){
-    if(!cand[p]||labels[p])continue;label++;let area=0,minx=w,maxx=-1,miny=h,maxy=-1,sumS=0,sumL=0,touch=0;labels[p]=label;q.length=0;q.push(p);
-    for(let head=0;head<q.length;head++){
-      const cur=q[head],x=cur%w,y=(cur/w)|0;area++;if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;if(y>=h-2)touch=1;
-      const i=cur*4;sumS+=satOf(d[i],d[i+1],d[i+2]);sumL+=lumOf(d[i],d[i+1],d[i+2]);
-      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const xx=x+dx,yy=y+dy;if(xx<0||xx>=w||yy<0||yy>=h)continue;const ni=yy*w+xx;if(cand[ni]&&!labels[ni]){labels[ni]=label;q.push(ni);}}
-    }
-    comps[label]={area,minx,maxx,miny,maxy,w:maxx-minx+1,h:maxy-miny+1,avgS:sumS/Math.max(1,area),avgL:sumL/Math.max(1,area),touch};
-  }
-  const out=mask.slice();let removed=0;
-  for(let l=1;l<comps.length;l++){
-    const c=comps[l];if(!c)continue;
-    const wide=c.w>w*.30,flat=c.h<h*.18,low=c.miny>h*.72,pale=c.avgS<22,bright=c.avgL>bg.lum-15;
-    if((wide&&flat&&low&&pale&&bright)||(c.touch&&wide&&flat&&pale)){for(let p=0;p<labels.length;p++)if(labels[p]===l){out[p]=0;removed++;}}
-  }
-  return {mask:out,removed};
-}
-function runJSGuardCutout(srcObj){
-  const w=srcObj.w,h=srcObj.h;
-  const bg=sampleBackgroundJS(srcObj.ctx,w,h);
-  const bgRes=buildBackgroundMaskJS(srcObj,bg);
-  let bin=new Uint8Array(w*h);for(let i=0;i<bin.length;i++)bin[i]=bgRes.bgMask[i]?0:1;
-  bin=recoverForegroundJS(bin,srcObj,bg,bgRes.baseTh);
-  const kept1=connectedKeep(bin,w,h);
-  let hole=fillHoles(kept1.mask,w,h);
-  let closed=closeSmall(hole.mask,w,h);
-  const floor=removeLargeFloorJS(closed,srcObj,bg);
-  const kept2=connectedKeep(floor.mask,w,h);
-  hole=fillHoles(kept2.mask,w,h);
-  closed=closeSmall(hole.mask,w,h);
-  const bbox=getBBox(closed,w,h),cutout=makeCutoutCanvas(srcObj,closed);
-  return {mask:closed,bbox,cutout,components:kept2.components,mainArea:kept2.mainArea,filled:hole.filled,removed:floor.removed,bg,baseTh:bgRes.baseTh,rect:{x:0,y:0,width:w,height:h}};
-}
-
-async function render(){
-  const file=$('file').files&&$('file').files[0];
-  if(!file){log('画像を選択してください。');return;}
-  try{
-    const img=await loadImage(file);
-    const src=canvasFromImage(img);
-    $('size').textContent=src.w+'x'+src.h;
-    ensureCanvasSize($('cOriginal'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w));
-    drawFitCanvas($('cOriginal'),src.canvas,false);
-    let cut,method,cvError='';
-    if(window.__cvReady&&window.cv){
-      try{log('OpenCV GrabCutで背景除去中...');cut=runOpenCVCutout(src);method='OpenCV GrabCut';}
-      catch(e){cvError=String(e&&e.message||e);log('OpenCV実行失敗。JS安全処理へ切替中...');cut=runJSGuardCutout(src);method='JS fallback after OpenCV error';}
-    }else{
-      log('OpenCV未読込のため、JS安全処理で背景除去中...');
-      cut=runJSGuardCutout(src);method='JS safe fallback';
-    }
-    ensureCanvasSize($('cCutout'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w));
-    drawImageOnChecker($('cCutout'),cut.cutout,true,false);
-    const s128=buildSource128(cut.cutout,cut.bbox);
-    state.last={source128:s128.canvas,cutout:cut.cutout,bbox:cut.bbox,final:null};
-    drawImageOnChecker($('cSource128'),s128.canvas,false,true);
-    runPipelineOnSource(s128.canvas);
-    $('bgInfo').textContent=method;
-    $('bgInfo').classList.toggle('warn',method.indexOf('JS')>=0);
-    log([
-      'Sprite Output: '+VERSION,
-      'background method: '+method,
-      cvError?('opencv error: '+cvError):'',
-      'source size: '+src.w+'x'+src.h,
-      'rect/base: x='+cut.rect.x+', y='+cut.rect.y+', w='+cut.rect.width+', h='+cut.rect.height,
-      'bbox: x='+cut.bbox.x+', y='+cut.bbox.y+', w='+cut.bbox.w+', h='+cut.bbox.h+', maskArea='+cut.bbox.count,
-      'components: '+cut.components+' / mainArea='+cut.mainArea+' / internal holes restored='+cut.filled,
-      typeof cut.removed==='number'?('floor removed: '+cut.removed+' px'):'',
-      cut.bg?('bg rgb: '+cut.bg.color.map(v=>v|0).join(', ')+' / threshold='+cut.baseTh.toFixed(1)):'',
-      'source128 draw: '+s128.dw+'x'+s128.dh+' @ '+s128.dx+','+s128.dy,
-      'check: Background Removed 内で顔・髪・袖・体にチェッカー穴が出ていないか確認してください。'
-    ].filter(Boolean));
-  }catch(err){
-    console.error(err);
-    log(['v1.15.2 error',String(err&&err.message||err),'画像読込または処理中に失敗しました。']);
-  }
-}
+async function render(){const file=$('file').files&&$('file').files[0];if(!file){log('画像を選択してください。');return;}try{if(!window.__cvReady||!window.cv||!window.cv.Mat||!window.cv.grabCut){log((window.__cvLines||[]).concat(['','OpenCVがREADYではありません。OpenCV再読込を押してください。']));return;}log('OpenCV GrabCutで背景除去中...');const img=await loadImage(file);const src=canvasFromImage(img);$('size').textContent=src.w+'x'+src.h;ensureCanvasSize($('cOriginal'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w));drawFitCanvas($('cOriginal'),src.canvas,false);const cut=runOpenCVCutout(src);ensureCanvasSize($('cCutout'),Math.min(src.w,520),Math.round(Math.min(src.w,520)*src.h/src.w));drawImageOnChecker($('cCutout'),cut.cutout,true,false);const s128=buildSource128(cut.cutout,cut.bbox);state.last={source128:s128.canvas,cutout:cut.cutout,bbox:cut.bbox,final:null};drawImageOnChecker($('cSource128'),s128.canvas,false,true);runPipelineOnSource(s128.canvas);$('bgInfo').textContent='OpenCV Guard';$('bgInfo').classList.remove('warn');log(['Sprite Output: '+VERSION,'background: OpenCV GrabCut + connected component guard + interior hole restore','source size: '+src.w+'x'+src.h,'grabcut rect: x='+cut.rect.x+', y='+cut.rect.y+', w='+cut.rect.width+', h='+cut.rect.height,'bbox: x='+cut.bbox.x+', y='+cut.bbox.y+', w='+cut.bbox.w+', h='+cut.bbox.h+', maskArea='+cut.bbox.count,'components: '+cut.components+' / mainArea='+cut.mainArea+' / internal holes restored='+cut.filled,'source128 draw: '+s128.dw+'x'+s128.dh+' @ '+s128.dx+','+s128.dy,'check: Background Removed 内で顔・髪・袖・体にチェッカー穴が出ていないか確認してください。']);}catch(err){console.error(err);log(['v1.15.3 error',String(err&&err.message||err),'OpenCV READYになっているか確認してください。Log / DebugのOpenCV診断を見てください。']);}}
 function rerunIfPossible(){if(state.last&&state.last.source128)runPipelineOnSource(state.last.source128);}
-function saveSummary(){const cards=[['Original',$('cOriginal')],['Cutout',$('cCutout')],['Source128',$('cSource128')],['Cleanup',$('cCleanup')],['Boost',$('cBoost')],['Quant',$('cQuant')],['Final',$('cFinal')],['Preview',$('cPreview')]];const c=makeCanvas(1400,760),ctx=c.getContext('2d');ctx.fillStyle='#0f172a';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#e2e8f0';ctx.font='bold 18px sans-serif';ctx.fillText('Sprite Studio v1.15.2 OpenCV Optional Guard',20,28);ctx.fillStyle='#94a3b8';ctx.font='12px sans-serif';ctx.fillText('OpenCV optional + JS fallback + post128 controls',20,48);let x=20,y=70,col=0;for(const [label,cv] of cards){ctx.fillStyle='#111827';ctx.fillRect(x,y,150,150);ctx.strokeStyle='#334155';ctx.strokeRect(x,y,150,150);if(cv&&cv.width){const fit=Math.min(134/cv.width,134/cv.height);const dw=Math.round(cv.width*fit),dh=Math.round(cv.height*fit);ctx.drawImage(cv,0,0,cv.width,cv.height,x+Math.round((150-dw)/2),y+Math.round((150-dh)/2),dw,dh);}ctx.fillStyle='#cbd5e1';ctx.fillText(label,x,y+168);col++;x+=170;if(col===4){col=0;x=20;y+=210;}}ctx.fillStyle='#cbd5e1';ctx.font='12px ui-monospace,monospace';const lines=($('log').textContent||'').split('\n').slice(0,16);for(let i=0;i<lines.length;i++)ctx.fillText(lines[i],720,90+i*16);saveCanvas(c,'sprite_summary_v1152_optional_guard.png');}
-function init(){updateToggleButtons();$('run').addEventListener('click',render);$('file').addEventListener('change',()=>setTimeout(render,120));$('btnCleanup').addEventListener('click',()=>{state.cleanup=!state.cleanup;updateToggleButtons();rerunIfPossible();});$('btnBoost').addEventListener('click',()=>{state.boost=!state.boost;updateToggleButtons();rerunIfPossible();});$('btnQuant').addEventListener('click',()=>{state.quant=!state.quant;updateToggleButtons();rerunIfPossible();});$('btnOutline').addEventListener('click',()=>{state.outline=!state.outline;updateToggleButtons();rerunIfPossible();});$('k').addEventListener('change',rerunIfPossible);$('boostLevel').addEventListener('change',rerunIfPossible);$('presetRaw').addEventListener('click',()=>{state.cleanup=false;state.boost=false;state.quant=false;state.outline=false;updateToggleButtons();rerunIfPossible();});$('presetAll').addEventListener('click',()=>{state.cleanup=true;state.boost=true;state.quant=true;state.outline=true;updateToggleButtons();rerunIfPossible();});$('saveCutout').addEventListener('click',()=>saveCanvas(state.last&&state.last.cutout,'cutout_v1152.png'));$('saveSource128').addEventListener('click',()=>saveCanvas(state.last&&state.last.source128,'source128_v1152.png'));$('saveCurrent').addEventListener('click',()=>saveCanvas(state.last&&state.last.final,'final128_v1152.png'));$('summary').addEventListener('click',saveSummary);}
-window.addEventListener('cv-ready',()=>{$('bgInfo').textContent='OpenCV ready';$('bgInfo').classList.remove('warn');log('OpenCV.js ready。OpenCV GrabCutで実行できます。');});
-window.addEventListener('cv-failed',()=>{if(!window.__cvReady){$('bgInfo').textContent='JS fallback ready';$('bgInfo').classList.add('warn');log('OpenCV.jsの読込待ちを終了。JS安全処理で実行できます。');}});
+function saveSummary(){const cards=[['Original',$('cOriginal')],['Cutout',$('cCutout')],['Source128',$('cSource128')],['Cleanup',$('cCleanup')],['Boost',$('cBoost')],['Quant',$('cQuant')],['Final',$('cFinal')],['Preview',$('cPreview')]];const c=makeCanvas(1400,760),ctx=c.getContext('2d');ctx.fillStyle='#0f172a';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#e2e8f0';ctx.font='bold 18px sans-serif';ctx.fillText('Sprite Studio v1.15.3 OpenCV Fixed Loader',20,28);ctx.fillStyle='#94a3b8';ctx.font='12px sans-serif';ctx.fillText('OpenCV fixed loader + GrabCut + post128 controls',20,48);let x=20,y=70,col=0;for(const [label,cv] of cards){ctx.fillStyle='#111827';ctx.fillRect(x,y,150,150);ctx.strokeStyle='#334155';ctx.strokeRect(x,y,150,150);if(cv&&cv.width){const fit=Math.min(134/cv.width,134/cv.height);const dw=Math.round(cv.width*fit),dh=Math.round(cv.height*fit);ctx.drawImage(cv,0,0,cv.width,cv.height,x+Math.round((150-dw)/2),y+Math.round((150-dh)/2),dw,dh);}ctx.fillStyle='#cbd5e1';ctx.fillText(label,x,y+168);col++;x+=170;if(col===4){col=0;x=20;y+=210;}}ctx.fillStyle='#cbd5e1';ctx.font='12px ui-monospace,monospace';const lines=($('log').textContent||'').split('\n').slice(0,16);for(let i=0;i<lines.length;i++)ctx.fillText(lines[i],720,90+i*16);saveCanvas(c,'sprite_summary_v1153_opencv_fixed_loader.png');}
+function init(){updateToggleButtons();$('run').addEventListener('click',render);$('reloadCv').addEventListener('click',()=>{log('OpenCV再読込を開始...');window.loadOpenCVFixed(true);});$('diagCv').addEventListener('click',()=>{log((window.__cvLines||[]).concat(['','state: ready='+window.__cvReady+', loading='+window.__cvLoading+', source='+(window.__cvSource||'')]).join('\n'));});$('file').addEventListener('change',()=>setTimeout(render,120));$('btnCleanup').addEventListener('click',()=>{state.cleanup=!state.cleanup;updateToggleButtons();rerunIfPossible();});$('btnBoost').addEventListener('click',()=>{state.boost=!state.boost;updateToggleButtons();rerunIfPossible();});$('btnQuant').addEventListener('click',()=>{state.quant=!state.quant;updateToggleButtons();rerunIfPossible();});$('btnOutline').addEventListener('click',()=>{state.outline=!state.outline;updateToggleButtons();rerunIfPossible();});$('k').addEventListener('change',rerunIfPossible);$('boostLevel').addEventListener('change',rerunIfPossible);$('presetRaw').addEventListener('click',()=>{state.cleanup=false;state.boost=false;state.quant=false;state.outline=false;updateToggleButtons();rerunIfPossible();});$('presetAll').addEventListener('click',()=>{state.cleanup=true;state.boost=true;state.quant=true;state.outline=true;updateToggleButtons();rerunIfPossible();});$('saveCutout').addEventListener('click',()=>saveCanvas(state.last&&state.last.cutout,'cutout_v1153.png'));$('saveSource128').addEventListener('click',()=>saveCanvas(state.last&&state.last.source128,'source128_v1153.png'));$('saveCurrent').addEventListener('click',()=>saveCanvas(state.last&&state.last.final,'final128_v1153.png'));$('summary').addEventListener('click',saveSummary);}
+window.addEventListener('cv-ready',()=>{$('run').disabled=false;$('run').textContent='再実行';$('bgInfo').textContent='OpenCV READY';$('bgInfo').classList.remove('warn');log((window.__cvLines||[]).concat(['','OpenCV.js READY。画像を選択してください。']).join('\n'));});
+window.addEventListener('cv-failed',()=>{$('run').disabled=true;$('run').textContent='OpenCV未読込';$('bgInfo').textContent='OpenCV failed';$('bgInfo').classList.add('warn');log((window.__cvLines||[]).concat(['','OpenCV読込失敗。OpenCV再読込を押してください。']).join('\n'));});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
