@@ -6,7 +6,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  var VERSION='v1.16.2-adjustable-refine';
+  var VERSION='v1.16.3-hotfix';
   function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
   function rgbDistance(data,p,q){
     var i=p*4,j=q*4;
@@ -328,7 +328,8 @@
 
   function recoverInternalBackground(mask,protectedMask,detail,imageData,w,h,bbox,strength,internalScale){
     var data=imageData.data||imageData,models=buildBorderModels(imageData,w,h),candidate=new Uint8Array(mask.length);
-    var tol=strength==='safe'?25:(strength==='strong'?48:36),maxDetail=strength==='safe'?17:(strength==='strong'?33:25);
+    var scale=Number.isFinite(internalScale)?Math.max(0.35,Math.min(1.5,internalScale)):0.75;
+    var tol=(strength==='safe'?25:(strength==='strong'?48:36))*scale,maxDetail=(strength==='safe'?17:(strength==='strong'?33:25))*scale;
     for(var y=bbox.miny;y<=bbox.maxy;y++)for(var x=bbox.minx;x<=bbox.maxx;x++){
       var p=y*w+x;if(!mask[p]||protectedMask[p])continue;
       var yn=(y-bbox.miny)/Math.max(1,bbox.h-1),xn=Math.abs(x-(bbox.minx+bbox.maxx)*.5)/Math.max(1,bbox.w*.5);
@@ -339,7 +340,7 @@
     for(var i=1;i<lab.components.length;i++){
       var c=lab.components[i],ratio=c.area/Math.max(1,maskArea),aspect=Math.max(c.w/c.h,c.h/c.w),yn=(c.cy-bbox.miny)/Math.max(1,bbox.h-1);
       var enclosed=c.border===0,thin=aspect>=2.0||Math.min(c.w,c.h)<=Math.max(3,Math.min(w,h)*.018);
-      var usefulSize=c.area>=Math.max(3,maskArea*.00005)&&c.area<=maskArea*(strength==='strong'?.09:.045);
+      var usefulSize=c.area>=Math.max(3,maskArea*.00005)&&c.area<=maskArea*(strength==='strong'?.09:.045)*Math.max(.55,scale);
       var centralPenalty=(yn>.30&&yn<.72&&Math.abs(c.cx-(bbox.minx+bbox.maxx)*.5)<bbox.w*.16);
       if(enclosed&&usefulSize&&thin&&!centralPenalty)remove[i]=1;
       if(usefulSize)debug.push({area:c.area,w:c.w,h:c.h,thin:thin,remove:!!remove[i]});
@@ -350,7 +351,7 @@
   }
 
   function removeSupportShapes(mask,protectedMask,detail,imageData,w,h,bbox,centerX,strength){
-    var params=regionParameters(strength),scale=Number.isFinite(internalScale)?internalScale:0.75;params.detail*=scale;params.color*=scale;params.score/=Math.max(0.35,scale);params.grow*=scale;var regions=labelUniformRegions(mask,protectedMask,detail,imageData,w,h,params),remove=new Int8Array(regions.regions.length),debug=[];
+    var params=regionParameters(strength),regions=labelUniformRegions(mask,protectedMask,detail,imageData,w,h,params),remove=new Int8Array(regions.regions.length),debug=[];
     for(var i=1;i<regions.regions.length;i++){
       var r=regions.regions[i],yn=(r.cy-bbox.miny)/Math.max(1,bbox.h-1),flat=r.w/Math.max(1,r.h),wide=r.w/Math.max(1,bbox.w),dist=Math.abs(r.cx-centerX)/Math.max(1,bbox.w*.5);
       var bottom=r.maxy>=bbox.maxy-Math.max(2,bbox.h*.12),lowDetail=r.detail<=(strength==='strong'?38:28),support=yn>.72&&bottom&&flat>=2.0&&wide>=.28&&lowDetail;
