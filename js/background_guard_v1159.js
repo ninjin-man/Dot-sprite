@@ -6,7 +6,7 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  var VERSION='v1.15.9-mask-refinement';
+  var VERSION='v1.16.2-adjustable-refine';
   function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
   function rgbDistance(data,p,q){
     var i=p*4,j=q*4;
@@ -276,8 +276,8 @@
     return {mask:out,objectRemoved:objectCount,brightRemoved:brightCount,regionMap:regionMap};
   }
 
-  function removeDistantLowDetail(mask,protectedMask,detail,bbox,centerX,w,h,strength){
-    var params=regionParameters(strength),candidate=new Uint8Array(mask.length);
+  function removeDistantLowDetail(mask,protectedMask,detail,bbox,centerX,w,h,strength,distanceThreshold){
+    var params=regionParameters(strength),candidate=new Uint8Array(mask.length);if(Number.isFinite(distanceThreshold))params.distance=distanceThreshold;
     for(var y=bbox.miny;y<=bbox.maxy;y++)for(var x=bbox.minx;x<=bbox.maxx;x++){
       var p=y*w+x;if(!mask[p]||protectedMask[p])continue;
       var dist=Math.abs(x-centerX)/Math.max(1,bbox.w),yn=(y-bbox.miny)/Math.max(1,bbox.h-1);
@@ -326,7 +326,7 @@
     return best;
   }
 
-  function recoverInternalBackground(mask,protectedMask,detail,imageData,w,h,bbox,strength){
+  function recoverInternalBackground(mask,protectedMask,detail,imageData,w,h,bbox,strength,internalScale){
     var data=imageData.data||imageData,models=buildBorderModels(imageData,w,h),candidate=new Uint8Array(mask.length);
     var tol=strength==='safe'?25:(strength==='strong'?48:36),maxDetail=strength==='safe'?17:(strength==='strong'?33:25);
     for(var y=bbox.miny;y<=bbox.maxy;y++)for(var x=bbox.minx;x<=bbox.maxx;x++){
@@ -350,7 +350,7 @@
   }
 
   function removeSupportShapes(mask,protectedMask,detail,imageData,w,h,bbox,centerX,strength){
-    var params=regionParameters(strength),regions=labelUniformRegions(mask,protectedMask,detail,imageData,w,h,params),remove=new Int8Array(regions.regions.length),debug=[];
+    var params=regionParameters(strength),scale=Number.isFinite(internalScale)?internalScale:0.75;params.detail*=scale;params.color*=scale;params.score/=Math.max(0.35,scale);params.grow*=scale;var regions=labelUniformRegions(mask,protectedMask,detail,imageData,w,h,params),remove=new Int8Array(regions.regions.length),debug=[];
     for(var i=1;i<regions.regions.length;i++){
       var r=regions.regions[i],yn=(r.cy-bbox.miny)/Math.max(1,bbox.h-1),flat=r.w/Math.max(1,r.h),wide=r.w/Math.max(1,bbox.w),dist=Math.abs(r.cx-centerX)/Math.max(1,bbox.w*.5);
       var bottom=r.maxy>=bbox.maxy-Math.max(2,bbox.h*.12),lowDetail=r.detail<=(strength==='strong'?38:28),support=yn>.72&&bottom&&flat>=2.0&&wide>=.28&&lowDetail;
@@ -404,10 +404,10 @@
       var grown=growRemovedRegions(working,protectedMask,regions.labels,regions.regions,decision.removeReason,input.imageData,w,h,params);
       working=grown.mask;objectRemoved=grown.objectRemoved;brightRemoved=grown.brightRemoved;regionDebug=decision.debug;
     }
-    if(options.distanceRemoval){var distant=removeDistantLowDetail(working,protectedMask,detail,bbox,centerX,w,h,strength);working=distant.mask;distanceRemoved=distant.removed;}
+    if(options.distanceRemoval){var distant=removeDistantLowDetail(working,protectedMask,detail,bbox,centerX,w,h,strength,options.distanceThreshold);working=distant.mask;distanceRemoved=distant.removed;}
     var internalRemoved=0,supportRemoved=0,internalDebug=[],supportDebug=[];
     if(options.internalRecovery!==false){
-      var internal=recoverInternalBackground(working,protectedMask,detail,input.imageData,w,h,bbox,strength);working=internal.mask;internalRemoved=internal.removed;internalDebug=internal.debug;
+      var internal=recoverInternalBackground(working,protectedMask,detail,input.imageData,w,h,bbox,strength,options.internalScale);working=internal.mask;internalRemoved=internal.removed;internalDebug=internal.debug;
     }
     if(options.supportRemoval!==false){
       var support=removeSupportShapes(working,protectedMask,detail,input.imageData,w,h,bbox,centerX,strength);working=support.mask;supportRemoved=support.removed;supportDebug=support.debug;
