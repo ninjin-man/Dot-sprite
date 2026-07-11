@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Sprite Studio v1.15.8 Sequential Mask Pipeline</title>
+<title>Sprite Studio v1.16.0 Feature Extraction Phase 1</title>
 <style>
 :root{--bg:#0f172a;--panel:#1e293b;--panel2:#111827;--line:#334155;--text:#e2e8f0;--muted:#94a3b8;--active:#0f766e;--activeLine:#14b8a6;--warn:#f59e0b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:14px 14px 40px}h1{font-size:20px;margin:0 0 4px}.sub{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px}.bar,.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px;margin:10px 0}button,input,select{font:inherit}button{border:1px solid var(--line);border-radius:12px;background:#22304a;color:var(--text);padding:9px 12px;font-weight:700}button.primary{background:#1d4ed8;border-color:#60a5fa}button.toggle.active{background:var(--active);border-color:var(--activeLine)}button.save{background:#334155;border-color:#64748b}button:disabled{opacity:.45}input[type=file]{max-width:100%;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}.card h2{font-size:16px;margin:0;padding:10px 12px;background:#22304a;display:flex;justify-content:space-between;gap:8px;align-items:center}.card .body{padding:10px}.card canvas{display:block;max-width:100%;background:#0b1020;border:1px solid var(--line);border-radius:8px}.wide{grid-column:1/-1}.pill{font-size:12px;color:#cbd5e1;background:#0f172a;border:1px solid var(--line);border-radius:999px;padding:3px 8px;white-space:nowrap}.pill.warn{color:#fde68a;border-color:#92400e}.log{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;color:#cbd5e1;background:#0b1020;border:1px solid var(--line);border-radius:12px;padding:10px;max-height:300px;overflow:auto}.preview{width:256px;height:256px;image-rendering:pixelated}.actual128{width:128px;height:128px;image-rendering:pixelated}.checker{background-color:#111827;background-image:linear-gradient(45deg,#1e293b 25%,transparent 25%),linear-gradient(-45deg,#1e293b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1e293b 75%),linear-gradient(-45deg,transparent 75%,#1e293b 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}.notice{border:1px solid #164e63;background:#082f49;border-radius:14px;padding:10px;margin:10px 0;color:#dbeafe;font-size:13px;line-height:1.55}.mini{font-size:12px;color:var(--muted)}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.spacer{flex:1}.footer{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}@media(max-width:640px){body{padding:10px}.grid{grid-template-columns:1fr}.preview{width:100%;height:auto}.bar button,.controls button{flex:1 1 auto}}
@@ -147,7 +147,7 @@
 </script>
 </head>
 <body>
-<h1>Sprite Studio v1.15.8 Sequential Mask Pipeline</h1>
+<h1>Sprite Studio v1.16.0 Feature Extraction Phase 1</h1>
 <div class="sub"><b style="color:#22c55e">直列マスク処理</b> / 解析専用画像へ輪郭保持平滑化・局所コントラスト・背景色差強調を順番に適用し、その結果を第1回GrabCut→外周追跡→再学習へ渡します。最終色は元画像を保持します。</div>
 <div class="bar">
   <input id="file" type="file" accept="image/*" />
@@ -157,6 +157,7 @@
   <button id="saveCutout" class="save">背景除去PNG保存</button>
   <button id="saveSource128" class="save">Source128保存</button>
   <button id="saveCurrent" class="save">現在結果保存</button>
+  <button id="saveFeatures" class="save">特徴量JSON保存</button>
   <button id="summary" class="save">まとめPNG</button>
 </div>
 <div class="controls">
@@ -175,6 +176,8 @@
   <button id="btnObjectRemoval" class="toggle active">背景物体除去 ON</button>
   <button id="btnDistanceRemoval" class="toggle active">距離除去 ON</button>
   <button id="btnBrightRemoval" class="toggle active">明るい均一背景 ON</button>
+  <button id="btnInternalRecovery" class="toggle active">内部背景回収 ON</button>
+  <button id="btnSupportRemoval" class="toggle active">台座・床影除去 ON</button>
   <button id="btnAutoScene" class="toggle active">背景タイプ自動判定 ON</button>
   <button id="btnBorderTrace" class="toggle active">外周背景追跡 ON</button>
   <button id="btnGrabRelearn" class="toggle active">GrabCut再学習 ON</button>
@@ -198,7 +201,10 @@
 <div class="grid">
   <div class="card"><h2>0. Original <span id="size" class="pill">no image</span></h2><div class="body"><canvas id="cOriginal"></canvas></div></div>
   <div class="card"><h2>0.5 Analysis Image <span class="pill">mask only</span></h2><div class="body"><canvas id="cAnalysis"></canvas></div></div>
-  <div class="card"><h2>1. Background Removed <span id="bgInfo" class="pill warn">OpenCV診断中</span></h2><div class="body"><canvas id="cCutout" class="checker"></canvas></div></div>
+  <div class="card"><h2>1. Visual Mask <span id="bgInfo" class="pill warn">OpenCV診断中</span></h2><div class="body"><canvas id="cCutout" class="checker"></canvas></div></div>
+  <div class="card"><h2>1.5 Structure Mask <span class="pill">特徴量用</span></h2><div class="body"><canvas id="cStructure" class="checker"></canvas></div></div>
+  <div class="card"><h2>1.6 Detail Mask <span class="pill">髪・武器・装飾</span></h2><div class="body"><canvas id="cDetail" class="checker"></canvas></div></div>
+  <div class="card"><h2>1.7 Feature Map <span id="featureInfo" class="pill">未解析</span></h2><div class="body"><canvas id="cFeatures" class="checker"></canvas></div></div>
   <div class="card"><h2>2. Source128 <span class="pill">基準</span></h2><div class="body"><canvas id="cSource128" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>3. Step Cleanup</h2><div class="body"><canvas id="cCleanup" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>4. Step Color Boost</h2><div class="body"><canvas id="cBoost" class="checker actual128" width="128" height="128"></canvas></div></div>
@@ -207,20 +213,21 @@
   <div class="card"><h2>7. Final Preview</h2><div class="body"><canvas id="cPreview" class="checker preview" width="256" height="256"></canvas></div></div>
   <div class="card wide"><h2>8. Log / Debug</h2><div class="body"><div id="log" class="log">OpenCV.js読込診断を開始します...</div></div></div>
 </div>
-<div class="footer">v1.15.7: OpenCV.jsローカル専用。基礎GrabCutをキャッシュし、新処理も個別ON/OFFで比較できます。GrabCut再学習のみ切替時に再計算します。</div>
-<script src="js/background_guard_v1158.js"></script>
+<div class="footer">v1.16.0: Structure Maskから姿勢・頭部・中心線・肩・腰・接地線を抽出。背景除去結果と特徴量解析を分離しています。</div>
+<script src="js/background_guard_v1159.js"></script>
+<script src="js/feature_extractor_v1160.js"></script>
 <script>
 (function(){
 'use strict';
-const VERSION='v1.15.8-sequential-mask';
+const VERSION='v1.16.0-feature-phase1';
 const $=id=>document.getElementById(id);
 const state={
   cleanup:true,boost:false,quant:true,outline:true,
   componentGuard:true,personScore:true,holeRestore:true,
-  objectRemoval:true,distanceRemoval:true,brightRemoval:true,
+  objectRemoval:true,distanceRemoval:true,brightRemoval:true,internalRecovery:true,supportRemoval:true,
   autoScene:true,borderTrace:true,grabRelearn:true,edgeProtect:true,alphaProtect:true,morphClose:false,
   analysisSmooth:true,localContrast:true,colorDifference:true,
-  original:null,base:null,last:null,busy:false,rerunTimer:0,scene:null
+  original:null,base:null,last:null,busy:false,rerunTimer:0,scene:null,features:null
 };
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lumOf=(r,g,b)=>0.299*r+0.587*g+0.114*b;
@@ -234,6 +241,7 @@ function drawFitCanvas(target,source,pixelated=false){const ctx=target.getContex
 function drawChecker(ctx,w,h,cell=8){ctx.fillStyle='#111827';ctx.fillRect(0,0,w,h);for(let y=0;y<h;y+=cell)for(let x=0;x<w;x+=cell){ctx.fillStyle=((x/cell+y/cell)&1)?'#1e293b':'#0b1020';ctx.fillRect(x,y,cell,cell);}}
 function drawImageOnChecker(target,source,fit=true,pixelated=false){const ctx=target.getContext('2d');drawChecker(ctx,target.width,target.height,8);ctx.imageSmoothingEnabled=!pixelated;if(fit){const s=Math.min(target.width/source.width,target.height/source.height);const dw=Math.max(1,Math.round(source.width*s)),dh=Math.max(1,Math.round(source.height*s));ctx.drawImage(source,0,0,source.width,source.height,Math.round((target.width-dw)/2),Math.round((target.height-dh)/2),dw,dh);}else ctx.drawImage(source,0,0);}
 function saveCanvas(canvas,name){if(!canvas||!canvas.width||!canvas.height)return;const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download=name;document.body.appendChild(a);a.click();a.remove();}
+function saveJson(data,name){if(!data)return;const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function setToggleButton(id,on,onText,offText){const b=$(id);b.classList.toggle('active',on);b.textContent=on?onText:offText;}
 function updateToggleButtons(){
   setToggleButton('btnAnalysisSmooth',state.analysisSmooth,'輪郭保持平滑化 ON','輪郭保持平滑化 OFF');
@@ -245,6 +253,8 @@ function updateToggleButtons(){
   setToggleButton('btnObjectRemoval',state.objectRemoval,'背景物体除去 ON','背景物体除去 OFF');
   setToggleButton('btnDistanceRemoval',state.distanceRemoval,'距離除去 ON','距離除去 OFF');
   setToggleButton('btnBrightRemoval',state.brightRemoval,'明るい均一背景 ON','明るい均一背景 OFF');
+  setToggleButton('btnInternalRecovery',state.internalRecovery,'内部背景回収 ON','内部背景回収 OFF');
+  setToggleButton('btnSupportRemoval',state.supportRemoval,'台座・床影除去 ON','台座・床影除去 OFF');
   setToggleButton('btnAutoScene',state.autoScene,'背景タイプ自動判定 ON','背景タイプ自動判定 OFF');
   setToggleButton('btnBorderTrace',state.borderTrace,'外周背景追跡 ON','外周背景追跡 OFF');
   setToggleButton('btnGrabRelearn',state.grabRelearn,'GrabCut再学習 ON','GrabCut再学習 OFF');
@@ -256,9 +266,10 @@ function updateToggleButtons(){
   setToggleButton('btnQuant',state.quant,'減色 ON','減色 OFF');
   setToggleButton('btnOutline',state.outline,'輪郭追加 ON','輪郭追加 OFF');
 }
-function backgroundOptions(){return {componentGuard:state.componentGuard,personScore:state.personScore,holeRestore:state.holeRestore,objectRemoval:state.objectRemoval,distanceRemoval:state.distanceRemoval,brightRemoval:state.brightRemoval,strength:$('bgStrength').value||'standard'};}
-function backgroundModeText(){const o=backgroundOptions();return [state.analysisSmooth?'smooth':'no-smooth',state.localContrast?'contrast':'no-contrast',state.colorDifference?'color-diff':'no-color-diff',state.autoScene?'auto-scene':'manual',state.borderTrace?'border':'no-border',state.grabRelearn?'relearn':'no-relearn',state.edgeProtect?'edge-protect':'no-edge',state.alphaProtect?'alpha':'no-alpha',state.morphClose?'close':'no-close',o.componentGuard?'component':'all-components',o.personScore?'person-score':'largest',o.holeRestore?'holes':'no-holes',o.objectRemoval?'objects':'no-objects',o.distanceRemoval?'distance':'no-distance',o.brightRemoval?'bright':'no-bright',o.strength].join(' / ');}
+function backgroundOptions(){return {componentGuard:state.componentGuard,personScore:state.personScore,holeRestore:state.holeRestore,objectRemoval:state.objectRemoval,distanceRemoval:state.distanceRemoval,brightRemoval:state.brightRemoval,internalRecovery:state.internalRecovery,supportRemoval:state.supportRemoval,strength:$('bgStrength').value||'standard'};}
+function backgroundModeText(){const o=backgroundOptions();return [state.analysisSmooth?'smooth':'no-smooth',state.localContrast?'contrast':'no-contrast',state.colorDifference?'color-diff':'no-color-diff',state.autoScene?'auto-scene':'manual',state.borderTrace?'border':'no-border',state.grabRelearn?'relearn':'no-relearn',state.edgeProtect?'edge-protect':'no-edge',state.alphaProtect?'alpha':'no-alpha',state.morphClose?'close':'no-close',o.componentGuard?'component':'all-components',o.personScore?'person-score':'largest',o.holeRestore?'holes':'no-holes',o.objectRemoval?'objects':'no-objects',o.distanceRemoval?'distance':'no-distance',o.brightRemoval?'bright':'no-bright',o.internalRecovery?'internal-bg':'no-internal-bg',o.supportRemoval?'support':'no-support',o.strength].join(' / ');}
 function makeCutoutCanvas(srcObj,mask){const srcImg=srcObj.ctx.getImageData(0,0,srcObj.w,srcObj.h),out=new ImageData(srcObj.w,srcObj.h);for(let p=0;p<mask.length;p++){if(!mask[p])continue;const i=p*4;out.data[i]=srcImg.data[i];out.data[i+1]=srcImg.data[i+1];out.data[i+2]=srcImg.data[i+2];out.data[i+3]=srcImg.data[i+3]||255;}const c=makeCanvas(srcObj.w,srcObj.h);c.getContext('2d').putImageData(out,0,0);return c;}
+function makeMaskCanvas(mask,w,h,mode){const c=makeCanvas(w,h),ctx=c.getContext('2d'),img=ctx.createImageData(w,h);for(let p=0;p<mask.length;p++){if(!mask[p])continue;const i=p*4;if(mode==='detail'){img.data[i]=245;img.data[i+1]=158;img.data[i+2]=11;}else{img.data[i]=226;img.data[i+1]=232;img.data[i+2]=240;}img.data[i+3]=255;}ctx.putImageData(img,0,0);return c;}
 function buildSource128(cutout,bbox){const c=makeCanvas(128,128),ctx=c.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';const fit=Math.min(118/Math.max(1,bbox.w),124/Math.max(1,bbox.h));const dw=Math.max(1,Math.round(bbox.w*fit)),dh=Math.max(1,Math.round(bbox.h*fit));const dx=Math.round((128-dw)/2);let dy=128-dh-2;if(dy<2)dy=2;ctx.drawImage(cutout,bbox.x,bbox.y,bbox.w,bbox.h,dx,dy,dw,dh);return {canvas:c,dw,dh,dx,dy};}
 function analyzeScene(srcObj){
   const img=srcObj.ctx.getImageData(0,0,srcObj.w,srcObj.h),d=img.data,w=srcObj.w,h=srcObj.h,n=w*h;
@@ -357,19 +368,22 @@ function formatGuardLog(result,s128){
     'mask area: raw='+st.rawArea+' -> final='+st.finalArea+' / removed='+(st.rawArea-st.finalArea),
     'components: '+st.components+' / mainArea='+st.mainArea+' / selectedScore='+(st.selectedScore||0).toFixed(1),
     'restore: internal holes='+st.holesRestored+' / small gaps='+st.smallGapsClosed+' / protected='+st.protectedRestored,
+    'refine: internal background removed='+st.internalBackgroundRemoved+' / support removed='+st.supportRemoved,
+    'feature masks: structure='+st.structureArea+' / detail='+st.detailArea,
     'removed: border='+((st.borderRemoved)||0)+' / objects='+st.objectRemoved+' / bright='+st.brightRemoved+' / distance='+st.distanceRemoved,
     'refine: relearn delta='+((st.relearnChanged)||0)+' / edge restored='+((st.edgeRestored)||0),
     'character center x='+st.centerX+' / strength='+st.strength,
     'bbox: x='+result.bbox.x+', y='+result.bbox.y+', w='+result.bbox.w+', h='+result.bbox.h+', maskArea='+result.bbox.count,
     'source128 draw: '+s128.dw+'x'+s128.dh+' @ '+s128.dx+','+s128.dy
   ];
+  if(state.features){const f=state.features;lines.push('features: pose='+f.pose+' / confidence='+Math.round(f.poseConfidence*100)+'% / quality='+f.quality);lines.push('landmarks: headBottom='+f.head.bottomY+' / shoulderY='+f.shoulders.y+' / waistY='+f.waist.y+' / groundY='+f.feet.groundY+' / centerX='+f.centerLine.x);lines.push('feature metrics: aspect='+f.metrics.aspect+' / fill='+f.metrics.fillRatio+' / centerDrift='+f.metrics.centerDrift);}
   if(st.componentScores&&st.componentScores.length){lines.push('person component scores:');for(const c of st.componentScores.slice(0,5))lines.push('  #'+c.label+' area='+c.area+' score='+c.score+(c.selected?' SELECTED':''));}
   if(st.regionDebug&&st.regionDebug.length){lines.push('uniform region decisions:');for(const r of st.regionDebug.slice(0,6))lines.push('  #'+r.label+' '+r.reason+' area='+r.area+' score='+r.score+' lum='+r.luma+' sat='+r.sat+' detail='+r.detail+' edge='+r.exposure);}
   lines.push('check: 衣装・髪・袖が欠けた場合は「安全」または該当処理をOFFにしてください。');
   return lines;
 }
 function applyBackgroundFromCache(){
-  if(!state.original||!state.base)return;if(!window.SpriteBackgroundGuard)throw new Error('background_guard_v1158.js not loaded');
+  if(!state.original||!state.base)return;if(!window.SpriteBackgroundGuard)throw new Error('background_guard_v1159.js not loaded');
   const imageData=state.original.ctx.getImageData(0,0,state.original.w,state.original.h);const analysis=state.analysis||state.original;let working=state.base.rawMask.slice();let borderRemoved=0,relearnChanged=0,edgeRestored=0;let bgMask=null;
   const scene=state.autoScene?state.base.scene:{type:'manual',alphaRatio:0,softAlphaRatio:0,borderMean:[0,0,0],borderVariance:0,brightBorderRatio:0};state.scene=scene;
   if(state.borderTrace&&scene.type!=='transparent'){bgMask=buildBorderBackgroundMask(analysis,scene);if(($('bgStrength').value||'standard')==='strong'){const tr=applyBorderTrace(working,bgMask,state.original.w,state.original.h);const remain=maskCount(tr.mask),before=maskCount(working);if(remain>before*.42){working=tr.mask;borderRemoved=tr.removed;}}}
@@ -378,11 +392,12 @@ function applyBackgroundFromCache(){
   if(state.edgeProtect){const ep=applyEdgeProtection(state.original,state.base.rawMask,result.mask);result.mask=ep.mask;edgeRestored=ep.restored;result.bbox=window.SpriteBackgroundGuard.getBBox(result.mask,state.original.w,state.original.h,true);result.stats.finalArea=maskCount(result.mask);}
   if(state.alphaProtect&&state.base.scene.type==='transparent'){for(let p=0;p<result.mask.length;p++)if(state.base.alphaMask[p])result.mask[p]=1;result.bbox=window.SpriteBackgroundGuard.getBBox(result.mask,state.original.w,state.original.h,true);result.stats.finalArea=maskCount(result.mask);}
   if(state.morphClose){result.mask=applyMorphClose(result.mask,state.original.w,state.original.h);result.bbox=window.SpriteBackgroundGuard.getBBox(result.mask,state.original.w,state.original.h,true);result.stats.finalArea=maskCount(result.mask);}
-  if(!result.bbox.count)throw new Error('背景除去後の人物マスクが空になりました。v1.15.6互換を選んでください。');
+  result.visualMask=result.mask;const featureMasks=window.SpriteBackgroundGuard.buildFeatureMasks(result.mask,state.original.w,state.original.h,result.bbox);result.structureMask=featureMasks.structureMask;result.detailMask=featureMasks.detailMask;result.stats.structureArea=maskCount(result.structureMask);result.stats.detailArea=maskCount(result.detailMask);
+  if(!result.bbox.count)throw new Error('背景除去後の人物マスクが空になりました。安全プリセットを選んでください。');
   result.stats.scene=scene;result.stats.borderRemoved=borderRemoved;result.stats.relearnChanged=relearnChanged;result.stats.edgeRestored=edgeRestored;
-  const cutout=makeCutoutCanvas(state.original,result.mask);ensureCanvasSize($('cCutout'),Math.min(state.original.w,520),Math.round(Math.min(state.original.w,520)*state.original.h/state.original.w));drawImageOnChecker($('cCutout'),cutout,true,false);const s128=buildSource128(cutout,result.bbox);state.last={source128:s128.canvas,cutout,bbox:result.bbox,final:null,result};runPipelineOnSource(s128.canvas);const removed=result.stats.objectRemoved+result.stats.brightRemoved+result.stats.distanceRemoved+borderRemoved;$('bgInfo').textContent=scene.type+' / -'+removed+'px';$('bgInfo').classList.remove('warn');log(formatGuardLog(result,s128));
+  const cutout=makeCutoutCanvas(state.original,result.visualMask||result.mask);ensureCanvasSize($('cCutout'),Math.min(state.original.w,520),Math.round(Math.min(state.original.w,520)*state.original.h/state.original.w));drawImageOnChecker($('cCutout'),cutout,true,false);const structureCanvas=makeMaskCanvas(result.structureMask,state.original.w,state.original.h,'structure'),detailCanvas=makeMaskCanvas(result.detailMask,state.original.w,state.original.h,'detail');ensureCanvasSize($('cStructure'),Math.min(state.original.w,520),Math.round(Math.min(state.original.w,520)*state.original.h/state.original.w));ensureCanvasSize($('cDetail'),Math.min(state.original.w,520),Math.round(Math.min(state.original.w,520)*state.original.h/state.original.w));drawImageOnChecker($('cStructure'),structureCanvas,true,false);drawImageOnChecker($('cDetail'),detailCanvas,true,false);let features=null;const featureCanvas=cloneCanvas(cutout);if(window.SpriteFeatureExtractor){features=window.SpriteFeatureExtractor.process({structureMask:result.structureMask,w:state.original.w,h:state.original.h});window.SpriteFeatureExtractor.drawOverlay(featureCanvas,features);state.features=features;$('featureInfo').textContent=features.pose+' / '+Math.round(features.poseConfidence*100)+'%';}else{$('featureInfo').textContent='module missing';}ensureCanvasSize($('cFeatures'),Math.min(state.original.w,520),Math.round(Math.min(state.original.w,520)*state.original.h/state.original.w));drawImageOnChecker($('cFeatures'),featureCanvas,true,false);const s128=buildSource128(cutout,result.bbox);state.last={source128:s128.canvas,cutout,structureCanvas,detailCanvas,featureCanvas,features,bbox:result.bbox,final:null,result};runPipelineOnSource(s128.canvas);const removed=result.stats.objectRemoved+result.stats.brightRemoved+result.stats.distanceRemoved+result.stats.internalBackgroundRemoved+result.stats.supportRemoved+borderRemoved;$('bgInfo').textContent=scene.type+' / -'+removed+'px';$('bgInfo').classList.remove('warn');log(formatGuardLog(result,s128));
 }
-function scheduleBackgroundRerun(){clearTimeout(state.rerunTimer);state.rerunTimer=setTimeout(()=>{try{applyBackgroundFromCache();}catch(err){console.error(err);log(['v1.15.8 rerun error',String(err&&err.message||err)]);}},90);}
+function scheduleBackgroundRerun(){clearTimeout(state.rerunTimer);state.rerunTimer=setTimeout(()=>{try{applyBackgroundFromCache();}catch(err){console.error(err);log(['v1.16.0 rerun error',String(err&&err.message||err)]);}},90);}
 async function render(){
   const file=$('file').files&&$('file').files[0];if(!file){log('画像を選択してください。');return;}
   if(state.busy)return;
@@ -393,29 +408,29 @@ async function render(){
     $('size').textContent=state.original.w+'x'+state.original.h;
     ensureCanvasSize($('cOriginal'),Math.min(state.original.w,520),Math.round(Math.min(state.original.w,520)*state.original.h/state.original.w));drawFitCanvas($('cOriginal'),state.original.canvas,false);
     state.analysis=preprocessAnalysisSource(state.original);ensureCanvasSize($('cAnalysis'),Math.min(state.analysis.w,520),Math.round(Math.min(state.analysis.w,520)*state.analysis.h/state.analysis.w));drawFitCanvas($('cAnalysis'),state.analysis.canvas,false);state.base=runOpenCVBaseMask(state.analysis,state.original);applyBackgroundFromCache();
-  }catch(err){console.error(err);log(['v1.15.8 error',String(err&&err.message||err),'OpenCV READYとjs/background_guard_v1158.jsの配置を確認してください。']);$('bgInfo').textContent='処理失敗';$('bgInfo').classList.add('warn');}
+  }catch(err){console.error(err);log(['v1.16.0 error',String(err&&err.message||err),'OpenCV READYとjs/background_guard_v1159.jsの配置を確認してください。']);$('bgInfo').textContent='処理失敗';$('bgInfo').classList.add('warn');}
   finally{state.busy=false;$('run').disabled=!window.__cvReady;$('run').textContent='再実行';}
 }
 function rerunPixelIfPossible(){if(state.last&&state.last.source128)runPipelineOnSource(state.last.source128);}
-function saveSummary(){const cards=[['Original',$('cOriginal')],['Analysis',$('cAnalysis')],['Cutout',$('cCutout')],['Source128',$('cSource128')],['Cleanup',$('cCleanup')],['Boost',$('cBoost')],['Quant',$('cQuant')],['Final',$('cFinal')],['Preview',$('cPreview')]];const c=makeCanvas(1400,960),ctx=c.getContext('2d');ctx.fillStyle='#0f172a';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#e2e8f0';ctx.font='bold 18px sans-serif';ctx.fillText('Sprite Studio v1.15.8 Sequential Mask Pipeline',20,28);ctx.fillStyle='#94a3b8';ctx.font='12px sans-serif';ctx.fillText('Sequential analysis enhancement + staged GrabCut + selectable guards',20,48);let x=20,y=70,col=0;for(const [label,cv] of cards){ctx.fillStyle='#111827';ctx.fillRect(x,y,150,150);ctx.strokeStyle='#334155';ctx.strokeRect(x,y,150,150);if(cv&&cv.width){const fit=Math.min(134/cv.width,134/cv.height),dw=Math.round(cv.width*fit),dh=Math.round(cv.height*fit);ctx.drawImage(cv,0,0,cv.width,cv.height,x+Math.round((150-dw)/2),y+Math.round((150-dh)/2),dw,dh);}ctx.fillStyle='#cbd5e1';ctx.fillText(label,x,y+168);col++;x+=170;if(col===4){col=0;x=20;y+=210;}}ctx.fillStyle='#cbd5e1';ctx.font='12px ui-monospace,monospace';const lines=($('log').textContent||'').split('\n').slice(0,18);for(let i=0;i<lines.length;i++)ctx.fillText(lines[i],720,90+i*16);saveCanvas(c,'sprite_summary_v1158_sequential_mask.png');}
+function saveSummary(){const cards=[['Original',$('cOriginal')],['Analysis',$('cAnalysis')],['Visual',$('cCutout')],['Structure',$('cStructure')],['Detail',$('cDetail')],['Features',$('cFeatures')],['Source128',$('cSource128')],['Cleanup',$('cCleanup')],['Boost',$('cBoost')],['Quant',$('cQuant')],['Final',$('cFinal')],['Preview',$('cPreview')]];const c=makeCanvas(1400,960),ctx=c.getContext('2d');ctx.fillStyle='#0f172a';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#e2e8f0';ctx.font='bold 18px sans-serif';ctx.fillText('Sprite Studio v1.16.0 Feature Extraction Phase 1',20,28);ctx.fillStyle='#94a3b8';ctx.font='12px sans-serif';ctx.fillText('Feature-safe masks + geometry-based pose and landmark extraction',20,48);let x=20,y=70,col=0;for(const [label,cv] of cards){ctx.fillStyle='#111827';ctx.fillRect(x,y,150,150);ctx.strokeStyle='#334155';ctx.strokeRect(x,y,150,150);if(cv&&cv.width){const fit=Math.min(134/cv.width,134/cv.height),dw=Math.round(cv.width*fit),dh=Math.round(cv.height*fit);ctx.drawImage(cv,0,0,cv.width,cv.height,x+Math.round((150-dw)/2),y+Math.round((150-dh)/2),dw,dh);}ctx.fillStyle='#cbd5e1';ctx.fillText(label,x,y+168);col++;x+=170;if(col===4){col=0;x=20;y+=210;}}ctx.fillStyle='#cbd5e1';ctx.font='12px ui-monospace,monospace';const lines=($('log').textContent||'').split('\n').slice(0,18);for(let i=0;i<lines.length;i++)ctx.fillText(lines[i],720,90+i*16);saveCanvas(c,'sprite_summary_v1160_feature_phase1.png');}
 function bindBackgroundToggle(id,key){$(id).addEventListener('click',()=>{state[key]=!state[key];updateToggleButtons();scheduleBackgroundRerun();});}
 function init(){
   updateToggleButtons();$('run').addEventListener('click',render);$('reloadCv').addEventListener('click',()=>{log('OpenCV再読込を開始...');window.loadOpenCVFixed(true);});
-  $('diagCv').addEventListener('click',()=>{log((window.__cvLines||[]).concat(['','state: ready='+window.__cvReady+', loading='+window.__cvLoading+', source='+(window.__cvSource||''),'guard module='+(window.SpriteBackgroundGuard?window.SpriteBackgroundGuard.VERSION:'missing')]).join('\n'));});
+  $('diagCv').addEventListener('click',()=>{log((window.__cvLines||[]).concat(['','state: ready='+window.__cvReady+', loading='+window.__cvLoading+', source='+(window.__cvSource||''),'guard module='+(window.SpriteBackgroundGuard?window.SpriteBackgroundGuard.VERSION:'missing')+', feature module='+(window.SpriteFeatureExtractor?window.SpriteFeatureExtractor.VERSION:'missing')]).join('\n'));});
   $('file').addEventListener('change',()=>setTimeout(render,120));
   $('btnAnalysisSmooth').addEventListener('click',()=>{state.analysisSmooth=!state.analysisSmooth;updateToggleButtons();render();});$('btnLocalContrast').addEventListener('click',()=>{state.localContrast=!state.localContrast;updateToggleButtons();render();});$('btnColorDifference').addEventListener('click',()=>{state.colorDifference=!state.colorDifference;updateToggleButtons();render();});
-  bindBackgroundToggle('btnComponentGuard','componentGuard');bindBackgroundToggle('btnPersonScore','personScore');bindBackgroundToggle('btnHoleRestore','holeRestore');bindBackgroundToggle('btnObjectRemoval','objectRemoval');bindBackgroundToggle('btnDistanceRemoval','distanceRemoval');bindBackgroundToggle('btnBrightRemoval','brightRemoval');bindBackgroundToggle('btnAutoScene','autoScene');bindBackgroundToggle('btnBorderTrace','borderTrace');bindBackgroundToggle('btnGrabRelearn','grabRelearn');bindBackgroundToggle('btnEdgeProtect','edgeProtect');bindBackgroundToggle('btnAlphaProtect','alphaProtect');bindBackgroundToggle('btnMorphClose','morphClose');
+  bindBackgroundToggle('btnComponentGuard','componentGuard');bindBackgroundToggle('btnPersonScore','personScore');bindBackgroundToggle('btnHoleRestore','holeRestore');bindBackgroundToggle('btnObjectRemoval','objectRemoval');bindBackgroundToggle('btnDistanceRemoval','distanceRemoval');bindBackgroundToggle('btnBrightRemoval','brightRemoval');bindBackgroundToggle('btnInternalRecovery','internalRecovery');bindBackgroundToggle('btnSupportRemoval','supportRemoval');bindBackgroundToggle('btnAutoScene','autoScene');bindBackgroundToggle('btnBorderTrace','borderTrace');bindBackgroundToggle('btnGrabRelearn','grabRelearn');bindBackgroundToggle('btnEdgeProtect','edgeProtect');bindBackgroundToggle('btnAlphaProtect','alphaProtect');bindBackgroundToggle('btnMorphClose','morphClose');
   $('bgStrength').addEventListener('change',scheduleBackgroundRerun);$('analysisStrength').addEventListener('change',render);
-  $('presetSequential').addEventListener('click',()=>{state.analysisSmooth=true;state.localContrast=true;state.colorDifference=true;state.borderTrace=true;state.grabRelearn=true;state.edgeProtect=true;state.alphaProtect=true;state.objectRemoval=true;state.distanceRemoval=true;state.brightRemoval=true;$('analysisStrength').value='standard';$('bgStrength').value='standard';updateToggleButtons();render();});
-  $('presetPale').addEventListener('click',()=>{state.analysisSmooth=true;state.localContrast=true;state.colorDifference=true;state.borderTrace=true;state.grabRelearn=true;state.edgeProtect=true;state.alphaProtect=true;state.objectRemoval=true;state.distanceRemoval=false;state.brightRemoval=false;$('analysisStrength').value='safe';$('bgStrength').value='safe';updateToggleButtons();render();});
-  $('presetComplex').addEventListener('click',()=>{state.analysisSmooth=true;state.localContrast=true;state.colorDifference=true;state.borderTrace=true;state.grabRelearn=true;state.edgeProtect=true;state.objectRemoval=true;state.distanceRemoval=true;state.brightRemoval=true;$('analysisStrength').value='strong';$('bgStrength').value='strong';updateToggleButtons();render();});
-  $('presetBgSafe').addEventListener('click',()=>{state.componentGuard=true;state.personScore=true;state.holeRestore=true;state.objectRemoval=true;state.distanceRemoval=false;state.brightRemoval=true;state.autoScene=true;state.borderTrace=false;state.grabRelearn=false;state.edgeProtect=true;state.alphaProtect=true;state.morphClose=false;$('bgStrength').value='safe';updateToggleButtons();scheduleBackgroundRerun();});
-  $('presetBgStandard').addEventListener('click',()=>{state.componentGuard=true;state.personScore=true;state.holeRestore=true;state.objectRemoval=true;state.distanceRemoval=true;state.brightRemoval=true;state.autoScene=true;state.borderTrace=true;state.grabRelearn=true;state.edgeProtect=true;state.alphaProtect=true;state.morphClose=false;$('bgStrength').value='standard';updateToggleButtons();scheduleBackgroundRerun();});
-  $('presetBgLegacy').addEventListener('click',()=>{state.componentGuard=true;state.personScore=true;state.holeRestore=true;state.objectRemoval=true;state.distanceRemoval=true;state.brightRemoval=true;state.autoScene=false;state.borderTrace=false;state.grabRelearn=false;state.edgeProtect=false;state.alphaProtect=false;state.morphClose=false;$('bgStrength').value='standard';updateToggleButtons();scheduleBackgroundRerun();});
+  $('presetSequential').addEventListener('click',()=>{state.analysisSmooth=true;state.localContrast=true;state.colorDifference=true;state.borderTrace=true;state.grabRelearn=true;state.edgeProtect=true;state.alphaProtect=true;state.objectRemoval=true;state.distanceRemoval=true;state.brightRemoval=true;state.internalRecovery=true;state.supportRemoval=true;$('analysisStrength').value='standard';$('bgStrength').value='standard';updateToggleButtons();render();});
+  $('presetPale').addEventListener('click',()=>{state.analysisSmooth=true;state.localContrast=true;state.colorDifference=true;state.borderTrace=true;state.grabRelearn=true;state.edgeProtect=true;state.alphaProtect=true;state.objectRemoval=true;state.distanceRemoval=false;state.brightRemoval=false;state.internalRecovery=true;state.supportRemoval=false;$('analysisStrength').value='safe';$('bgStrength').value='safe';updateToggleButtons();render();});
+  $('presetComplex').addEventListener('click',()=>{state.analysisSmooth=true;state.localContrast=true;state.colorDifference=true;state.borderTrace=true;state.grabRelearn=true;state.edgeProtect=true;state.objectRemoval=true;state.distanceRemoval=true;state.brightRemoval=true;state.internalRecovery=true;state.supportRemoval=true;$('analysisStrength').value='strong';$('bgStrength').value='strong';updateToggleButtons();render();});
+  $('presetBgSafe').addEventListener('click',()=>{state.componentGuard=true;state.personScore=true;state.holeRestore=true;state.objectRemoval=true;state.distanceRemoval=false;state.brightRemoval=true;state.internalRecovery=true;state.supportRemoval=false;state.autoScene=true;state.borderTrace=false;state.grabRelearn=false;state.edgeProtect=true;state.alphaProtect=true;state.morphClose=false;$('bgStrength').value='safe';updateToggleButtons();scheduleBackgroundRerun();});
+  $('presetBgStandard').addEventListener('click',()=>{state.componentGuard=true;state.personScore=true;state.holeRestore=true;state.objectRemoval=true;state.distanceRemoval=true;state.brightRemoval=true;state.internalRecovery=true;state.supportRemoval=true;state.autoScene=true;state.borderTrace=true;state.grabRelearn=true;state.edgeProtect=true;state.alphaProtect=true;state.morphClose=false;$('bgStrength').value='standard';updateToggleButtons();scheduleBackgroundRerun();});
+  $('presetBgLegacy').addEventListener('click',()=>{state.componentGuard=true;state.personScore=true;state.holeRestore=true;state.objectRemoval=true;state.distanceRemoval=true;state.brightRemoval=true;state.internalRecovery=false;state.supportRemoval=false;state.autoScene=false;state.borderTrace=false;state.grabRelearn=false;state.edgeProtect=false;state.alphaProtect=false;state.morphClose=false;$('bgStrength').value='standard';updateToggleButtons();scheduleBackgroundRerun();});
   $('btnCleanup').addEventListener('click',()=>{state.cleanup=!state.cleanup;updateToggleButtons();rerunPixelIfPossible();});$('btnBoost').addEventListener('click',()=>{state.boost=!state.boost;updateToggleButtons();rerunPixelIfPossible();});$('btnQuant').addEventListener('click',()=>{state.quant=!state.quant;updateToggleButtons();rerunPixelIfPossible();});$('btnOutline').addEventListener('click',()=>{state.outline=!state.outline;updateToggleButtons();rerunPixelIfPossible();});
   $('k').addEventListener('change',rerunPixelIfPossible);$('boostLevel').addEventListener('change',rerunPixelIfPossible);
   $('presetRaw').addEventListener('click',()=>{state.cleanup=false;state.boost=false;state.quant=false;state.outline=false;updateToggleButtons();rerunPixelIfPossible();});$('presetAll').addEventListener('click',()=>{state.cleanup=true;state.boost=true;state.quant=true;state.outline=true;updateToggleButtons();rerunPixelIfPossible();});
-  $('saveCutout').addEventListener('click',()=>saveCanvas(state.last&&state.last.cutout,'cutout_v1158.png'));$('saveSource128').addEventListener('click',()=>saveCanvas(state.last&&state.last.source128,'source128_v1158.png'));$('saveCurrent').addEventListener('click',()=>saveCanvas(state.last&&state.last.final,'final128_v1158.png'));$('summary').addEventListener('click',saveSummary);
+  $('saveCutout').addEventListener('click',()=>saveCanvas(state.last&&state.last.cutout,'cutout_v1160.png'));$('saveSource128').addEventListener('click',()=>saveCanvas(state.last&&state.last.source128,'source128_v1160.png'));$('saveCurrent').addEventListener('click',()=>saveCanvas(state.last&&state.last.final,'final128_v1160.png'));$('saveFeatures').addEventListener('click',()=>saveJson(state.features,'sprite_features_v1160.json'));$('summary').addEventListener('click',saveSummary);
 }
 window.addEventListener('cv-ready',()=>{$('run').disabled=false;$('run').textContent='再実行';$('bgInfo').textContent='OpenCV READY';$('bgInfo').classList.remove('warn');log((window.__cvLines||[]).concat(['','OpenCV.js READY。画像を選択してください。','Adaptive Guard: '+(window.SpriteBackgroundGuard?window.SpriteBackgroundGuard.VERSION:'missing')]).join('\n'));});
 window.addEventListener('cv-failed',()=>{$('run').disabled=true;$('run').textContent='OpenCV未読込';$('bgInfo').textContent='OpenCV failed';$('bgInfo').classList.add('warn');log((window.__cvLines||[]).concat(['','OpenCV読込失敗。OpenCV再読込を押してください。']).join('\n'));});
