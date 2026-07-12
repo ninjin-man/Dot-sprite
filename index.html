@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Sprite Studio v1.16.3 Analysis Quantize + Source512</title>
+<title>Sprite Studio v1.17.0 128 Quality Pipeline</title>
 <style>
 :root{--bg:#0f172a;--panel:#1e293b;--panel2:#111827;--line:#334155;--text:#e2e8f0;--muted:#94a3b8;--active:#0f766e;--activeLine:#14b8a6;--warn:#f59e0b}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:14px 14px 40px}h1{font-size:20px;margin:0 0 4px}.sub{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px}.bar,.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px;margin:10px 0}button,input,select{font:inherit}button{border:1px solid var(--line);border-radius:12px;background:#22304a;color:var(--text);padding:9px 12px;font-weight:700}button.primary{background:#1d4ed8;border-color:#60a5fa}button.toggle.active{background:var(--active);border-color:var(--activeLine)}button.save{background:#334155;border-color:#64748b}button:disabled{opacity:.45}input[type=file]{max-width:100%;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}.card h2{font-size:16px;margin:0;padding:10px 12px;background:#22304a;display:flex;justify-content:space-between;gap:8px;align-items:center}.card .body{padding:10px}.card canvas{display:block;max-width:100%;background:#0b1020;border:1px solid var(--line);border-radius:8px}.wide{grid-column:1/-1}.pill{font-size:12px;color:#cbd5e1;background:#0f172a;border:1px solid var(--line);border-radius:999px;padding:3px 8px;white-space:nowrap}.pill.warn{color:#fde68a;border-color:#92400e}.log{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.45;color:#cbd5e1;background:#0b1020;border:1px solid var(--line);border-radius:12px;padding:10px;max-height:300px;overflow:auto}.preview{width:256px;height:256px;image-rendering:pixelated}.actual128{width:128px;height:128px;image-rendering:pixelated}.checker{background-color:#111827;background-image:linear-gradient(45deg,#1e293b 25%,transparent 25%),linear-gradient(-45deg,#1e293b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1e293b 75%),linear-gradient(-45deg,transparent 75%,#1e293b 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0}.notice{border:1px solid #164e63;background:#082f49;border-radius:14px;padding:10px;margin:10px 0;color:#dbeafe;font-size:13px;line-height:1.55}.mini{font-size:12px;color:var(--muted)}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.spacer{flex:1}.footer{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}.explorer-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.candidate{background:#0b1020;border:1px solid var(--line);border-radius:12px;padding:8px}.candidate.best{border-color:#22c55e}.candidate canvas{width:100%;aspect-ratio:1/1}.candidate .score{font-size:13px;font-weight:800;margin:6px 0}.candidate .meta{font-size:11px;color:var(--muted);line-height:1.4}.candidate button{width:100%;margin-top:7px}.upscale{width:100%;max-width:512px;height:auto;image-rendering:auto}@media(max-width:640px){.explorer-grid{grid-template-columns:1fr}}@media(max-width:640px){body{padding:10px}.grid{grid-template-columns:1fr}.preview{width:100%;height:auto}.bar button,.controls button{flex:1 1 auto}}
@@ -147,7 +147,7 @@
 </script>
 </head>
 <body>
-<h1>Sprite Studio v1.16.3 Analysis Quantize + Source512</h1>
+<h1>Sprite Studio v1.17.0 128 Quality Pipeline</h1>
 <div class="sub"><b style="color:#22c55e">直列マスク処理</b> / 解析専用画像へ輪郭保持平滑化・局所コントラスト・背景色差強調を順番に適用し、その結果を第1回GrabCut→外周追跡→再学習へ渡します。最終色は元画像を保持します。</div>
 <div class="bar">
   <input id="file" type="file" accept="image/*" />
@@ -199,12 +199,15 @@
   <div class="spacer"></div><button id="presetBgSafe">安全背景除去</button><button id="presetBgStandard">推奨設定</button><button id="presetBgLegacy">v1.15.6互換</button>
 </div>
 <div class="controls">
-  <span class="mini"><b>128px後処理</b></span>
+  <span class="mini"><b>128px品質処理</b></span>
+  <button id="btnFringe" class="toggle active">境界色除去 ON</button>
+  <button id="btnStagedResize" class="toggle active">段階縮小 ON</button>
+  <div class="row"><span class="mini">縮小モード</span><select id="resizeMode"><option value="faithful" selected>忠実</option><option value="detail">細部重視</option><option value="soft">半透明重視</option></select></div>
   <button id="btnCleanup" class="toggle active">ノイズ削除 ON</button>
   <button id="btnBoost" class="toggle">色を濃くする OFF</button>
   <button id="btnQuant" class="toggle active">減色 ON</button>
   <button id="btnOutline" class="toggle active">輪郭追加 ON</button>
-  <div class="row"><span class="mini">色数</span><select id="k"><option value="12">12</option><option value="10">10</option><option value="14">14</option><option value="8">8</option><option value="16">16</option></select></div>
+  <div class="row"><span class="mini">出力色数</span><select id="k"><option value="64">64</option><option value="48" selected>48</option><option value="32">32</option><option value="24">24</option><option value="16">16</option></select></div>
   <div class="row"><span class="mini">濃色化</span><select id="boostLevel"><option value="1.10">弱</option><option value="1.18" selected>中</option><option value="1.28">強</option></select></div>
   <div class="spacer"></div><button id="presetRaw">Source128のみ</button><button id="presetAll">全処理ON</button>
 </div>
@@ -218,7 +221,7 @@
   <div class="card"><h2>1.7 Feature Map <span id="featureInfo" class="pill">未解析</span></h2><div class="body"><canvas id="cFeatures" class="checker"></canvas></div></div>
   <div class="card wide"><h2>1.8 Pipeline Explorer <span class="pill">上位3候補</span></h2><div class="body"><div id="explorerResults" class="explorer-grid"><div class="mini">画像処理後に「上位3候補を探索」を押してください。</div></div></div></div>
   <div class="card wide"><h2>2. Source512 <span class="pill">高解像度中間素材</span></h2><div class="body"><canvas id="cSource512" class="checker upscale" width="512" height="512"></canvas><div class="mini">元解像度の切り抜きから直接512pxへ正規化し、この画像から128pxを生成します。</div></div></div>
-  <div class="card"><h2>2.5 Source128 <span class="pill">512→128</span></h2><div class="body"><canvas id="cSource128" class="checker actual128" width="128" height="128"></canvas></div></div>
+  <div class="card"><h2>2.5 Source128 <span class="pill">境界補正・段階縮小</span></h2><div class="body"><canvas id="cSource128" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>3. Step Cleanup</h2><div class="body"><canvas id="cCleanup" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>4. Step Color Boost</h2><div class="body"><canvas id="cBoost" class="checker actual128" width="128" height="128"></canvas></div></div>
   <div class="card"><h2>5. Step Quantize</h2><div class="body"><canvas id="cQuant" class="checker actual128" width="128" height="128"></canvas></div></div>
@@ -227,16 +230,16 @@
 
   <div class="card wide"><h2>8. Log / Debug</h2><div class="body"><div id="log" class="log">OpenCV.js読込診断を開始します...</div></div></div>
 </div>
-<div class="footer">v1.16.3: internalScale参照エラーを修正。内部背景回収の強度値を回収処理へ正しく適用。Source512/128/Finalの停止を解消。</div>
+<div class="footer">v1.17.0: 元解像度切り抜き→Source512→256→128の品質パイプライン、境界色除去、透明画素RGB清掃、48/64色出力を追加。</div>
 <script src="js/background_guard_v1159.js"></script>
 <script src="js/feature_extractor_v1160.js"></script>
 <script>
 (function(){
 'use strict';
-const VERSION='v1.16.2-analysis-quant-source512';
+const VERSION='v1.17.0-128-quality';
 const $=id=>document.getElementById(id);
 const state={
-  cleanup:true,boost:false,quant:true,outline:true,
+  cleanup:true,boost:false,quant:true,outline:true,fringe:true,stagedResize:true,
   componentGuard:true,personScore:true,holeRestore:true,
   objectRemoval:true,distanceRemoval:true,brightRemoval:true,internalRecovery:true,supportRemoval:true,
   autoScene:true,borderTrace:true,grabRelearn:true,edgeProtect:true,alphaProtect:true,morphClose:false,
@@ -276,6 +279,8 @@ function updateToggleButtons(){
   setToggleButton('btnEdgeProtect',state.edgeProtect,'輪郭保護 ON','輪郭保護 OFF');
   setToggleButton('btnAlphaProtect',state.alphaProtect,'Alpha保護 ON','Alpha保護 OFF');
   setToggleButton('btnMorphClose',state.morphClose,'輪郭補修 ON','輪郭補修 OFF');
+  setToggleButton('btnFringe',state.fringe,'境界色除去 ON','境界色除去 OFF');
+  setToggleButton('btnStagedResize',state.stagedResize,'段階縮小 ON','段階縮小 OFF');
   setToggleButton('btnCleanup',state.cleanup,'ノイズ削除 ON','ノイズ削除 OFF');
   setToggleButton('btnBoost',state.boost,'色を濃くする ON','色を濃くする OFF');
   setToggleButton('btnQuant',state.quant,'減色 ON','減色 OFF');
@@ -286,7 +291,40 @@ function backgroundModeText(){const o=backgroundOptions();return [state.analysis
 function makeCutoutCanvas(srcObj,mask){const srcImg=srcObj.ctx.getImageData(0,0,srcObj.w,srcObj.h),out=new ImageData(srcObj.w,srcObj.h);for(let p=0;p<mask.length;p++){if(!mask[p])continue;const i=p*4;out.data[i]=srcImg.data[i];out.data[i+1]=srcImg.data[i+1];out.data[i+2]=srcImg.data[i+2];out.data[i+3]=srcImg.data[i+3]||255;}const c=makeCanvas(srcObj.w,srcObj.h);c.getContext('2d').putImageData(out,0,0);return c;}
 function makeMaskCanvas(mask,w,h,mode){const c=makeCanvas(w,h),ctx=c.getContext('2d'),img=ctx.createImageData(w,h);for(let p=0;p<mask.length;p++){if(!mask[p])continue;const i=p*4;if(mode==='detail'){img.data[i]=245;img.data[i+1]=158;img.data[i+2]=11;}else{img.data[i]=226;img.data[i+1]=232;img.data[i+2]=240;}img.data[i+3]=255;}ctx.putImageData(img,0,0);return c;}
 function buildSource512(cutout,bbox){const c=makeCanvas(512,512),ctx=c.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';const fit=Math.min(472/Math.max(1,bbox.w),496/Math.max(1,bbox.h));const dw=Math.max(1,Math.round(bbox.w*fit)),dh=Math.max(1,Math.round(bbox.h*fit));const dx=Math.round((512-dw)/2);let dy=512-dh-8;if(dy<8)dy=8;ctx.drawImage(cutout,bbox.x,bbox.y,bbox.w,bbox.h,dx,dy,dw,dh);return {canvas:c,dw,dh,dx,dy};}
-function downsample512To128(source512){const c=makeCanvas(128,128),ctx=c.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(source512,0,0,512,512,0,0,128,128);return c;}
+function cleanTransparentRgb(input){
+  const c=cloneCanvas(input),ctx=c.getContext('2d',{willReadFrequently:true}),im=ctx.getImageData(0,0,c.width,c.height),d=im.data;
+  for(let i=0;i<d.length;i+=4)if(d[i+3]===0){d[i]=0;d[i+1]=0;d[i+2]=0;}
+  ctx.putImageData(im,0,0);return c;
+}
+function removeColorFringe(input,passes=3){
+  const c=cloneCanvas(input),ctx=c.getContext('2d',{willReadFrequently:true}),im=ctx.getImageData(0,0,c.width,c.height),d=im.data,w=c.width,h=c.height;
+  const src=new Uint8ClampedArray(d);
+  for(let pass=0;pass<passes;pass++){
+    const prev=new Uint8ClampedArray(d);
+    for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+      const i=(y*w+x)*4,a=prev[i+3];if(a>=245||a===0)continue;
+      let rr=0,gg=0,bb=0,ww=0;
+      for(let oy=-1;oy<=1;oy++)for(let ox=-1;ox<=1;ox++){
+        const j=((y+oy)*w+x+ox)*4,na=prev[j+3];if(na<180)continue;
+        const wt=na/255;rr+=prev[j]*wt;gg+=prev[j+1]*wt;bb+=prev[j+2]*wt;ww+=wt;
+      }
+      if(ww>0){d[i]=Math.round(rr/ww);d[i+1]=Math.round(gg/ww);d[i+2]=Math.round(bb/ww);}
+    }
+  }
+  for(let i=0;i<d.length;i+=4)if(d[i+3]===0){d[i]=0;d[i+1]=0;d[i+2]=0;}
+  ctx.putImageData(im,0,0);return c;
+}
+function resizeCanvasHighQuality(source,w,h,mode='faithful'){
+  const c=makeCanvas(w,h),ctx=c.getContext('2d');ctx.clearRect(0,0,w,h);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(source,0,0,source.width,source.height,0,0,w,h);
+  if(mode==='detail')return stageBoost(c,1.035);
+  return c;
+}
+function downsample512To128(source512){
+  let src=state.fringe?removeColorFringe(source512,3):cleanTransparentRgb(source512);
+  const mode=$('resizeMode')?$('resizeMode').value:'faithful';
+  if(state.stagedResize){const c256=resizeCanvasHighQuality(src,256,256,mode);return resizeCanvasHighQuality(c256,128,128,mode);}
+  return resizeCanvasHighQuality(src,128,128,mode);
+}
 function analyzeScene(srcObj){
   const img=srcObj.ctx.getImageData(0,0,srcObj.w,srcObj.h),d=img.data,w=srcObj.w,h=srcObj.h,n=w*h;
   let transparent=0,soft=0;for(let p=0;p<n;p++){const a=d[p*4+3];if(a<8)transparent++;else if(a<250)soft++;}
@@ -431,7 +469,7 @@ async function runExplorer(){
   catch(e){console.error(e);$('explorerStatus').textContent='探索失敗';log(['Pipeline Explorer error',String(e&&e.message||e)]);}finally{state.explorerBusy=false;$('runExplorer').disabled=false;}
 }
 function renderExplorerResults(){const box=$('explorerResults');box.innerHTML='';state.explorerResults.forEach((r,i)=>{const d=document.createElement('div');d.className='candidate'+(i===0?' best':'');const cv=document.createElement('canvas');cv.width=192;cv.height=192;drawImageOnChecker(cv,r.cutout,true,false);const title=document.createElement('div');title.className='score';title.textContent='#'+(i+1)+' '+r.name+'  '+r.score+'点';const meta=document.createElement('div');meta.className='meta';meta.textContent='人物減少 '+r.metrics.lossPct+'% / 除去 '+r.metrics.removed+'px / 縦横比 '+r.metrics.aspect;const b=document.createElement('button');b.textContent='この設定を適用';b.addEventListener('click',()=>{applyBackgroundConfig(r.config);applyBackgroundFromCache();});d.append(cv,title,meta,b);box.appendChild(d);});}
-function runPipelineOnSource(source128){drawImageOnChecker($('cSource128'),source128,false,true);let c=cloneCanvas(source128);if(state.cleanup)c=stageCleanup(c);drawImageOnChecker($('cCleanup'),c,false,true);let b=cloneCanvas(c);if(state.boost)b=stageBoost(b,Number($('boostLevel').value||1.18));drawImageOnChecker($('cBoost'),b,false,true);let q=cloneCanvas(b);if(state.quant)q=stageQuantize(q,Number($('k').value||12));drawImageOnChecker($('cQuant'),q,false,true);let f=cloneCanvas(q);if(state.outline)f=stageOutline(f);drawImageOnChecker($('cFinal'),f,false,true);drawImageOnChecker($('cPreview'),f,true,true);$('modeInfo').textContent=[state.cleanup?'cleanup':'nocleanup',state.boost?'boost':'noboost',state.quant?'quant':'noquant',state.outline?'outline':'nooutline'].join(' / ');if(state.last)state.last.final=f;}
+function runPipelineOnSource(source128){drawImageOnChecker($('cSource128'),source128,false,true);let c=cloneCanvas(source128);if(state.cleanup)c=stageCleanup(c);drawImageOnChecker($('cCleanup'),c,false,true);let b=cloneCanvas(c);if(state.boost)b=stageBoost(b,Number($('boostLevel').value||1.18));drawImageOnChecker($('cBoost'),b,false,true);let q=cloneCanvas(b);if(state.quant)q=stageQuantize(q,Number($('k').value||12));drawImageOnChecker($('cQuant'),q,false,true);let f=cloneCanvas(q);if(state.outline)f=stageOutline(f);drawImageOnChecker($('cFinal'),f,false,true);drawImageOnChecker($('cPreview'),f,true,true);$('modeInfo').textContent=[state.fringe?'fringe':'no-fringe',state.stagedResize?'512-256-128':'512-128',($('resizeMode').value||'faithful'),state.cleanup?'cleanup':'nocleanup',state.boost?'boost':'noboost',state.quant?'quant':'noquant',state.outline?'outline':'nooutline'].join(' / ');if(state.last)state.last.final=f;}
 function formatGuardLog(result,s128){
   const st=result.stats,lines=[
     'Sprite Output: '+VERSION,
@@ -450,7 +488,8 @@ function formatGuardLog(result,s128){
     'refine: relearn delta='+((st.relearnChanged)||0)+' / edge restored='+((st.edgeRestored)||0),
     'character center x='+st.centerX+' / strength='+st.strength,
     'bbox: x='+result.bbox.x+', y='+result.bbox.y+', w='+result.bbox.w+', h='+result.bbox.h+', maskArea='+result.bbox.count,
-    'source128 draw: '+s128.dw+'x'+s128.dh+' @ '+s128.dx+','+s128.dy
+    'source128 draw: '+s128.dw+'x'+s128.dh+' @ '+s128.dx+','+s128.dy,
+    '128 quality: fringe='+state.fringe+' / staged='+state.stagedResize+' / mode='+($('resizeMode').value||'faithful')+' / colors='+($('k').value||48)
   ];
   if(state.features){const f=state.features;lines.push('features: pose='+f.pose+' / confidence='+Math.round(f.poseConfidence*100)+'% / quality='+f.quality);lines.push('landmarks: headBottom='+f.head.bottomY+' / shoulderY='+f.shoulders.y+' / waistY='+f.waist.y+' / groundY='+f.feet.groundY+' / centerX='+f.centerLine.x);lines.push('feature metrics: aspect='+f.metrics.aspect+' / fill='+f.metrics.fillRatio+' / centerDrift='+f.metrics.centerDrift);}
   if(st.componentScores&&st.componentScores.length){lines.push('person component scores:');for(const c of st.componentScores.slice(0,5))lines.push('  #'+c.label+' area='+c.area+' score='+c.score+(c.selected?' SELECTED':''));}
@@ -484,11 +523,11 @@ async function render(){
     $('size').textContent=state.original.w+'x'+state.original.h;
     ensureCanvasSize($('cOriginal'),Math.min(state.original.w,520),Math.round(Math.min(state.original.w,520)*state.original.h/state.original.w));drawFitCanvas($('cOriginal'),state.original.canvas,false);
     state.analysis=preprocessAnalysisSource(state.original);ensureCanvasSize($('cAnalysis'),Math.min(state.analysis.w,520),Math.round(Math.min(state.analysis.w,520)*state.analysis.h/state.analysis.w));drawFitCanvas($('cAnalysis'),state.analysis.canvas,false);state.base=runOpenCVBaseMask(state.analysis,state.original);applyBackgroundFromCache();
-  }catch(err){console.error(err);log(['v1.16.3 error',String(err&&err.message||err),'OpenCV READYとjs/background_guard_v1159.jsの配置を確認してください。']);$('bgInfo').textContent='処理失敗';$('bgInfo').classList.add('warn');}
+  }catch(err){console.error(err);log(['v1.17.0 error',String(err&&err.message||err),'OpenCV READYとjs/background_guard_v1159.jsの配置を確認してください。']);$('bgInfo').textContent='処理失敗';$('bgInfo').classList.add('warn');}
   finally{state.busy=false;$('run').disabled=!window.__cvReady;$('run').textContent='再実行';}
 }
 function rerunPixelIfPossible(){if(state.last&&state.last.source128)runPipelineOnSource(state.last.source128);}
-function saveSummary(){const cards=[['Original',$('cOriginal')],['Analysis',$('cAnalysis')],['Visual',$('cCutout')],['Structure',$('cStructure')],['Detail',$('cDetail')],['Features',$('cFeatures')],['Source512',$('cSource512')],['Source128',$('cSource128')],['Cleanup',$('cCleanup')],['Boost',$('cBoost')],['Quant',$('cQuant')],['Final',$('cFinal')],['Preview',$('cPreview')]];const c=makeCanvas(1400,960),ctx=c.getContext('2d');ctx.fillStyle='#0f172a';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#e2e8f0';ctx.font='bold 18px sans-serif';ctx.fillText('Sprite Studio v1.16.3 Analysis Quantize + Source512',20,28);ctx.fillStyle='#94a3b8';ctx.font='12px sans-serif';ctx.fillText('Feature-safe masks + geometry-based pose and landmark extraction',20,48);let x=20,y=70,col=0;for(const [label,cv] of cards){ctx.fillStyle='#111827';ctx.fillRect(x,y,150,150);ctx.strokeStyle='#334155';ctx.strokeRect(x,y,150,150);if(cv&&cv.width){const fit=Math.min(134/cv.width,134/cv.height),dw=Math.round(cv.width*fit),dh=Math.round(cv.height*fit);ctx.drawImage(cv,0,0,cv.width,cv.height,x+Math.round((150-dw)/2),y+Math.round((150-dh)/2),dw,dh);}ctx.fillStyle='#cbd5e1';ctx.fillText(label,x,y+168);col++;x+=170;if(col===4){col=0;x=20;y+=210;}}ctx.fillStyle='#cbd5e1';ctx.font='12px ui-monospace,monospace';const lines=($('log').textContent||'').split('\n').slice(0,18);for(let i=0;i<lines.length;i++)ctx.fillText(lines[i],720,90+i*16);saveCanvas(c,'sprite_summary_v1162_analysis_quant_source512.png');}
+function saveSummary(){const cards=[['Original',$('cOriginal')],['Analysis',$('cAnalysis')],['Visual',$('cCutout')],['Structure',$('cStructure')],['Detail',$('cDetail')],['Features',$('cFeatures')],['Source512',$('cSource512')],['Source128',$('cSource128')],['Cleanup',$('cCleanup')],['Boost',$('cBoost')],['Quant',$('cQuant')],['Final',$('cFinal')],['Preview',$('cPreview')]];const c=makeCanvas(1400,960),ctx=c.getContext('2d');ctx.fillStyle='#0f172a';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#e2e8f0';ctx.font='bold 18px sans-serif';ctx.fillText('Sprite Studio v1.17.0 128 Quality Pipeline',20,28);ctx.fillStyle='#94a3b8';ctx.font='12px sans-serif';ctx.fillText('Feature-safe masks + geometry-based pose and landmark extraction',20,48);let x=20,y=70,col=0;for(const [label,cv] of cards){ctx.fillStyle='#111827';ctx.fillRect(x,y,150,150);ctx.strokeStyle='#334155';ctx.strokeRect(x,y,150,150);if(cv&&cv.width){const fit=Math.min(134/cv.width,134/cv.height),dw=Math.round(cv.width*fit),dh=Math.round(cv.height*fit);ctx.drawImage(cv,0,0,cv.width,cv.height,x+Math.round((150-dw)/2),y+Math.round((150-dh)/2),dw,dh);}ctx.fillStyle='#cbd5e1';ctx.fillText(label,x,y+168);col++;x+=170;if(col===4){col=0;x=20;y+=210;}}ctx.fillStyle='#cbd5e1';ctx.font='12px ui-monospace,monospace';const lines=($('log').textContent||'').split('\n').slice(0,18);for(let i=0;i<lines.length;i++)ctx.fillText(lines[i],720,90+i*16);saveCanvas(c,'sprite_summary_v1170_128_quality.png');}
 function bindBackgroundToggle(id,key){$(id).addEventListener('click',()=>{state[key]=!state[key];updateToggleButtons();scheduleBackgroundRerun();});}
 function init(){
   updateToggleButtons();$('run').addEventListener('click',render);$('reloadCv').addEventListener('click',()=>{log('OpenCV再読込を開始...');window.loadOpenCVFixed(true);});
@@ -503,10 +542,11 @@ function init(){
   $('presetBgSafe').addEventListener('click',()=>{state.componentGuard=true;state.personScore=true;state.holeRestore=true;state.objectRemoval=true;state.distanceRemoval=false;state.brightRemoval=true;state.internalRecovery=true;state.supportRemoval=false;state.autoScene=true;state.borderTrace=false;state.grabRelearn=false;state.edgeProtect=true;state.alphaProtect=true;state.morphClose=false;$('bgStrength').value='safe';updateToggleButtons();scheduleBackgroundRerun();});
   $('presetBgStandard').addEventListener('click',()=>{state.componentGuard=true;state.personScore=true;state.holeRestore=true;state.objectRemoval=true;state.distanceRemoval=true;state.brightRemoval=true;state.internalRecovery=true;state.supportRemoval=true;state.autoScene=true;state.borderTrace=true;state.grabRelearn=true;state.edgeProtect=true;state.alphaProtect=true;state.morphClose=false;$('bgStrength').value='standard';updateToggleButtons();scheduleBackgroundRerun();});
   $('presetBgLegacy').addEventListener('click',()=>{state.componentGuard=true;state.personScore=true;state.holeRestore=true;state.objectRemoval=true;state.distanceRemoval=true;state.brightRemoval=true;state.internalRecovery=false;state.supportRemoval=false;state.autoScene=false;state.borderTrace=false;state.grabRelearn=false;state.edgeProtect=false;state.alphaProtect=false;state.morphClose=false;$('bgStrength').value='standard';updateToggleButtons();scheduleBackgroundRerun();});
+  $('btnFringe').addEventListener('click',()=>{state.fringe=!state.fringe;updateToggleButtons();if(state.last&&state.last.source512){state.last.source128=downsample512To128(state.last.source512);rerunPixelIfPossible();}});$('btnStagedResize').addEventListener('click',()=>{state.stagedResize=!state.stagedResize;updateToggleButtons();if(state.last&&state.last.source512){state.last.source128=downsample512To128(state.last.source512);rerunPixelIfPossible();}});$('resizeMode').addEventListener('change',()=>{if(state.last&&state.last.source512){state.last.source128=downsample512To128(state.last.source512);rerunPixelIfPossible();}});
   $('btnCleanup').addEventListener('click',()=>{state.cleanup=!state.cleanup;updateToggleButtons();rerunPixelIfPossible();});$('btnBoost').addEventListener('click',()=>{state.boost=!state.boost;updateToggleButtons();rerunPixelIfPossible();});$('btnQuant').addEventListener('click',()=>{state.quant=!state.quant;updateToggleButtons();rerunPixelIfPossible();});$('btnOutline').addEventListener('click',()=>{state.outline=!state.outline;updateToggleButtons();rerunPixelIfPossible();});
   $('k').addEventListener('change',rerunPixelIfPossible);$('boostLevel').addEventListener('change',rerunPixelIfPossible);
   $('presetRaw').addEventListener('click',()=>{state.cleanup=false;state.boost=false;state.quant=false;state.outline=false;updateToggleButtons();rerunPixelIfPossible();});$('presetAll').addEventListener('click',()=>{state.cleanup=true;state.boost=true;state.quant=true;state.outline=true;updateToggleButtons();rerunPixelIfPossible();});
-  $('saveCutout').addEventListener('click',()=>saveCanvas(state.last&&state.last.cutout,'cutout_v1162.png'));$('saveSource128').addEventListener('click',()=>saveCanvas(state.last&&state.last.source128,'source128_v1162.png'));$('saveSource512').addEventListener('click',()=>saveCanvas(state.last&&state.last.source512,'source512_v1162.png'));$('saveCurrent').addEventListener('click',()=>saveCanvas(state.last&&state.last.final,'final128_v1162.png'));$('saveFeatures').addEventListener('click',()=>saveJson(state.features,'sprite_features_v1162.json'));$('summary').addEventListener('click',saveSummary);
+  $('saveCutout').addEventListener('click',()=>saveCanvas(state.last&&state.last.cutout,'cutout_v1170.png'));$('saveSource128').addEventListener('click',()=>saveCanvas(state.last&&state.last.source128,'source128_v1170.png'));$('saveSource512').addEventListener('click',()=>saveCanvas(state.last&&state.last.source512,'source512_v1170.png'));$('saveCurrent').addEventListener('click',()=>saveCanvas(state.last&&state.last.final,'final128_v1170.png'));$('saveFeatures').addEventListener('click',()=>saveJson(state.features,'sprite_features_v1170.json'));$('summary').addEventListener('click',saveSummary);
 }
 window.addEventListener('cv-ready',()=>{$('run').disabled=false;$('run').textContent='再実行';$('bgInfo').textContent='OpenCV READY';$('bgInfo').classList.remove('warn');log((window.__cvLines||[]).concat(['','OpenCV.js READY。画像を選択してください。','Adaptive Guard: '+(window.SpriteBackgroundGuard?window.SpriteBackgroundGuard.VERSION:'missing')]).join('\n'));});
 window.addEventListener('cv-failed',()=>{$('run').disabled=true;$('run').textContent='OpenCV未読込';$('bgInfo').textContent='OpenCV failed';$('bgInfo').classList.add('warn');log((window.__cvLines||[]).concat(['','OpenCV読込失敗。OpenCV再読込を押してください。']).join('\n'));});
