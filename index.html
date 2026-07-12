@@ -1,11 +1,34 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>Sprite Studio v1.18.0 Rule-Based SD</title><style>
-:root{color-scheme:dark}body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;margin:0;background:#111;color:#eee}.wrap{max-width:760px;margin:auto;padding:14px}.card{background:#1d1d1f;border:1px solid #333;border-radius:14px;padding:12px;margin:10px 0}h1{font-size:20px;margin:4px 0 12px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.preview{background:#ddd;border-radius:10px;padding:6px;text-align:center;color:#111}.preview canvas{width:100%;image-rendering:pixelated;background:repeating-conic-gradient(#eee 0 25%,#ccc 0 50%) 50%/16px 16px}.controls{display:grid;grid-template-columns:1fr 72px;gap:8px;align-items:center}.controls input[type=range]{width:100%}button,.file{display:block;width:100%;box-sizing:border-box;padding:13px;border:0;border-radius:12px;background:#3478f6;color:white;font-weight:700;text-align:center;margin:8px 0}input[type=file]{display:none}.note{font-size:12px;color:#bbb;line-height:1.5}.stage{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stage canvas{width:100%;background:#fff;border-radius:8px}</style></head><body><div class="wrap"><h1>Sprite Studio v1.18.0 — AI不使用 SD変形</h1><label class="file">画像を選ぶ<input id="file" type="file" accept="image/*"></label><div class="card"><div class="controls">
-<label>頭幅</label><output id="headXo">1.18</output><input id="headX" type="range" min="1" max="1.35" step="0.01" value="1.18"><span></span>
-<label>胴の縦圧縮</label><output id="torsoYo">0.72</output><input id="torsoY" type="range" min="0.55" max="1" step="0.01" value="0.72"><span></span>
-<label>脚の縦圧縮</label><output id="legYo">0.55</output><input id="legY" type="range" min="0.4" max="1" step="0.01" value="0.55"><span></span>
-</div><button id="run">ルールベースで処理</button><div class="note">背景境界の連結除去 → 連続座標ワープ → Premultiplied Alpha補間 → 輪郭清掃 → 減色。部位を切断しないため、首・腰・膝の継ぎ目ノイズを抑えます。</div></div>
-<div class="grid"><div class="preview">128×128<canvas id="c128" width="128" height="128"></canvas><button data-save="c128">PNG保存</button></div><div class="preview">64×64<canvas id="c64" width="64" height="64"></canvas><button data-save="c64">PNG保存</button></div><div class="preview">32×32<canvas id="c32" width="32" height="32"></canvas><button data-save="c32">PNG保存</button></div></div>
-<div class="card stage"><div>背景除去<canvas id="cut" width="512" height="512"></canvas></div><div>連続変形<canvas id="warp" width="512" height="512"></canvas></div></div></div>
-<script src="js/rule_based_sd_v1180.js"></script><script>
-let img=new Image();const $=s=>document.getElementById(s);function paint(dst,src){const c=$(dst),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.imageSmoothingEnabled=false;x.drawImage(src,0,0,c.width,c.height)}function run(){if(!img.complete||!img.naturalWidth)return;const r=RuleBasedSD.process(img,{headX:+$('headX').value,torsoY:+$('torsoY').value,legY:+$('legY').value,colors:48});paint('c128',r.c128);paint('c64',r.c64);paint('c32',r.c32);paint('cut',r.cut);paint('warp',r.warped);window.__result=r}['headX','torsoY','legY'].forEach(k=>$(k).oninput=()=>{$(k+'o').textContent=$(k).value});$('run').onclick=run;$('file').onchange=e=>{const f=e.target.files[0];if(!f)return;img.onload=run;img.src=URL.createObjectURL(f)};document.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{const c=$(b.dataset.save),a=document.createElement('a');a.download=b.dataset.save+'.png';a.href=c.toDataURL('image/png');a.click()});img.onload=run;img.src='assets/sample_input.JPG';
-</script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sprite Studio v1.19.0 SD再構築</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d2433;background:#eef1f6}
+*{box-sizing:border-box} body{margin:0;padding:12px}.app{max-width:980px;margin:auto}.card{background:white;border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 2px 12px #0001}h1{font-size:20px;margin:0 0 6px}.sub{font-size:12px;color:#667085}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}button,.fileLabel,select{border:0;border-radius:10px;padding:11px 13px;font-weight:700;background:#e5e9f2;color:#182033}.primary{background:#3867e8;color:white}.danger{background:#fbe7e7;color:#9b1c1c}.fileLabel input{display:none}.control{margin:10px 0}.control label{font-size:13px;font-weight:700;display:flex;justify-content:space-between}.control input[type=range]{width:100%}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stage{background:#dfe4ed;border-radius:12px;min-height:260px;display:grid;place-items:center;overflow:hidden;position:relative}.stage canvas{max-width:100%;max-height:70vh;image-rendering:pixelated;touch-action:none}.tag{position:absolute;top:7px;left:7px;background:#000a;color:white;padding:4px 7px;border-radius:7px;font-size:11px}.status{white-space:pre-wrap;font:12px ui-monospace,monospace;background:#101828;color:#d1e9ff;padding:9px;border-radius:9px;min-height:48px}.phase{font-size:12px;background:#f3f5f9;padding:7px;border-radius:8px;flex:1;min-width:145px}.phase b{display:block}.brush.active{outline:3px solid #7293ff}.small{font-size:11px;color:#687386}.download{display:none}@media(max-width:700px){.grid{grid-template-columns:1fr}.stage{min-height:220px}}
+</style>
+</head>
+<body><main class="app">
+<section class="card"><h1>Sprite Studio v1.19.0</h1><div class="sub">Phase 1–4：AIなし・SD体型再構築・128×128正式対応</div></section>
+<section class="card">
+ <div class="row">
+  <label class="fileLabel primary">画像を選ぶ<input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
+  <button id="sampleBtn">サンプルを読む</button><button id="resetBtn">補正を消す</button>
+ </div>
+ <div class="control"><label><span>頭身</span><output id="ratioOut">3.0頭身</output></label><input id="ratio" type="range" min="2.2" max="3.8" step="0.1" value="3.0"></div>
+ <div class="row"><label>顔処理 <select id="faceMode"><option value="original">元顔を保護</option><option value="template">SD顔をルール描画</option></select></label><label>背景許容 <input id="bgTol" type="range" min="12" max="90" value="42"></label></div>
+ <div class="row" style="margin-top:9px"><button class="brush" data-mode="keep">残す</button><button class="brush" data-mode="remove">消す</button><button class="brush" data-mode="protect">保護</button><button id="eraseBrush" class="brush" data-mode="erase">補正消し</button><span class="small">元画像上を指でなぞって補正</span></div>
+ <div class="control"><label><span>ブラシ幅</span><output id="brushOut">18</output></label><input id="brushSize" type="range" min="4" max="60" value="18"></div>
+ <button id="runBtn" class="primary" style="width:100%">SDドット絵を生成</button>
+</section>
+<section class="card"><div class="grid">
+ <div class="stage"><span class="tag">入力・補正</span><canvas id="sourceCanvas" width="320" height="320"></canvas></div>
+ <div class="stage"><span class="tag">128×128 出力</span><canvas id="outputCanvas" width="128" height="128"></canvas></div>
+</div><div class="row" style="margin-top:9px"><button id="downloadBtn" class="primary">PNG保存</button><button id="compareBtn">比較PNG保存</button></div></section>
+<section class="card"><div class="row"><div class="phase"><b>Phase 1</b>領域・アンカー・SD体型再配置</div><div class="phase"><b>Phase 2</b>顔保護／SD顔、髪シルエット補正</div><div class="phase"><b>Phase 3</b>服・袖・帯・細長い特徴の保護</div><div class="phase"><b>Phase 4</b>限定パレット、輪郭、穴・孤立点補正</div></div></section>
+<section class="card"><div id="status" class="status">画像を選択してください。</div><pre id="selftest" hidden></pre></section>
+</main>
+<script src="js/opencv.js"></script>
+<script src="js/sd_reconstructor_v1190.js"></script>
+</body></html>
